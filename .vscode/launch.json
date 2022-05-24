@@ -1,0 +1,20 @@
+{
+    // Use o IntelliSense para saber mais sobre os atributos possíveis.
+    // Focalizar para exibir as descrições dos atributos existentes.
+    // Para obter mais informações, acesse: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        
+        {
+            "name": "Debug ANTLR4 grammar",
+            "type": "antlr-debug",
+            "request": "launch",
+            "input": "input.txt",
+            "grammar": "grammars/Example.g4",
+            "actionFile": "grammars/exampleActions.js",
+            "startRule": "start",
+            "printParseTree": true,
+            "visualParseTree": true
+        }
+    ]
+}

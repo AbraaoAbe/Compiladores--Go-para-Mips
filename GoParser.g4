@@ -26,11 +26,11 @@
  * A Go grammar for ANTLR 4 derived from the Go Language Specification https://golang.org/ref/spec
  */
 
-parser grammar goparser;
+parser grammar GoParser;
 
 options {
 	tokenVocab = GoLexer;
-	superClass = GoParserBase;
+	//superClass = GoParserBase;
 }
 
 sourceFile:
@@ -79,7 +79,7 @@ varSpec:
 
 block: L_CURLY statementList? R_CURLY;
 
-statementList: ((SEMI? | EOS? | {closingBracket()}?) statement eos)+;
+statementList: ((SEMI? | EOS? ) statement eos)+;
 
 statement:
 	declaration
@@ -376,5 +376,4 @@ eos:
 	SEMI
 	| EOF
 	| EOS
-	| {closingBracket()}?
 	;
