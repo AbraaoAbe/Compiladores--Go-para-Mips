@@ -5,16 +5,16 @@ lexer grammar GoLexer;
 BREAK                  : 'break' -> mode(NLSEMI);
 DEFAULT                : 'default';
 FUNC                   : 'func';
-INTERFACE              : 'interface';
+// INTERFACE              : 'interface';
 SELECT                 : 'select';
 CASE                   : 'case';
-DEFER                  : 'defer';
-GO                     : 'go';
+// DEFER                  : 'defer';
+// GO                     : 'go';
 MAP                    : 'map';
 STRUCT                 : 'struct';
-CHAN                   : 'chan';
+// CHAN                   : 'chan';
 ELSE                   : 'else';
-GOTO                   : 'goto';
+// GOTO                   : 'goto';
 PACKAGE                : 'package';
 SWITCH                 : 'switch';
 CONST                  : 'const';
@@ -48,7 +48,7 @@ DOT                    : '.';
 PLUS_PLUS              : '++' -> mode(NLSEMI);
 MINUS_MINUS            : '--' -> mode(NLSEMI);
 DECLARE_ASSIGN         : ':=';
-ELLIPSIS               : '...';
+// ELLIPSIS               : '...';
 
 // Logical
 
@@ -69,9 +69,9 @@ GREATER_OR_EQUALS      : '>=';
 OR                     : '|';
 DIV                    : '/';
 MOD                    : '%';
-LSHIFT                 : '<<';
-RSHIFT                 : '>>';
-BIT_CLEAR              : '&^';
+// LSHIFT                 : '<<';
+// RSHIFT                 : '>>';
+// BIT_CLEAR              : '&^';
 
 // Unary operators
 
@@ -83,91 +83,105 @@ PLUS                   : '+';
 MINUS                  : '-';
 CARET                  : '^';
 STAR                   : '*';
-AMPERSAND              : '&';
-RECEIVE                : '<-';
+// AMPERSAND              : '&';
+// RECEIVE                : '<-';
 
 // Number literals
 
 DECIMAL_LIT            : ('0' | [1-9] ('_'? [0-9])*) -> mode(NLSEMI);
-BINARY_LIT             : '0' [bB] ('_'? BIN_DIGIT)+ -> mode(NLSEMI);
-OCTAL_LIT              : '0' [oO]? ('_'? OCTAL_DIGIT)+ -> mode(NLSEMI);
-HEX_LIT                : '0' [xX]  ('_'? HEX_DIGIT)+ -> mode(NLSEMI);
+//BINARY_LIT             : '0' [bB] ('_'? BIN_DIGIT)+ -> mode(NLSEMI);
+//OCTAL_LIT              : '0' [oO]? ('_'? OCTAL_DIGIT)+ -> mode(NLSEMI);
+//HEX_LIT                : '0' [xX]  ('_'? HEX_DIGIT)+ -> mode(NLSEMI);
 
 
-FLOAT_LIT : (DECIMAL_FLOAT_LIT | HEX_FLOAT_LIT) -> mode(NLSEMI);
+// FLOAT_LIT : (DECIMAL_FLOAT_LIT | HEX_FLOAT_LIT) -> mode(NLSEMI);
+FLOAT_LIT : (DECIMAL_FLOAT_LIT) -> mode(NLSEMI);
 
 DECIMAL_FLOAT_LIT      : DECIMALS ('.' DECIMALS? EXPONENT? | EXPONENT)
                        | '.' DECIMALS EXPONENT?
                        ;
 
-HEX_FLOAT_LIT          : '0' [xX] HEX_MANTISSA HEX_EXPONENT
-                       ;
+//HEX_FLOAT_LIT          : '0' [xX] HEX_MANTISSA HEX_EXPONENT
+//                       ;
 
-fragment HEX_MANTISSA  : ('_'? HEX_DIGIT)+ ('.' ( '_'? HEX_DIGIT )*)?
-                       | '.' HEX_DIGIT ('_'? HEX_DIGIT)*;
+//fragment HEX_MANTISSA  : ('_'? HEX_DIGIT)+ ('.' ( '_'? HEX_DIGIT )*)?
+//                       | '.' HEX_DIGIT ('_'? HEX_DIGIT)*;
 
-fragment HEX_EXPONENT  : [pP] [+-]? DECIMALS;
+//fragment HEX_EXPONENT  : [pP] [+-]? DECIMALS;
 
 
-IMAGINARY_LIT          : (DECIMAL_LIT | BINARY_LIT |  OCTAL_LIT | HEX_LIT | FLOAT_LIT) 'i' -> mode(NLSEMI);
+//IMAGINARY_LIT          : (DECIMAL_LIT | BINARY_LIT |  OCTAL_LIT | HEX_LIT | FLOAT_LIT) 'i' -> mode(NLSEMI);
 
 // Rune literals
 
-fragment RUNE               : '\'' (UNICODE_VALUE | BYTE_VALUE) '\'';//: '\'' (~[\n\\] | ESCAPED_VALUE) '\'';
+//fragment RUNE               : '\'' (UNICODE_VALUE | BYTE_VALUE) '\'';//: '\'' (~[\n\\] | ESCAPED_VALUE) '\'';
 
-RUNE_LIT                : RUNE -> mode(NLSEMI);
+//RUNE_LIT                : RUNE -> mode(NLSEMI);
 
 
 
-BYTE_VALUE : OCTAL_BYTE_VALUE | HEX_BYTE_VALUE;
+//BYTE_VALUE : OCTAL_BYTE_VALUE | HEX_BYTE_VALUE;
 
-OCTAL_BYTE_VALUE: '\\' OCTAL_DIGIT OCTAL_DIGIT OCTAL_DIGIT;
+//OCTAL_BYTE_VALUE: '\\' OCTAL_DIGIT OCTAL_DIGIT OCTAL_DIGIT;
 
-HEX_BYTE_VALUE: '\\' 'x'  HEX_DIGIT HEX_DIGIT;
+//HEX_BYTE_VALUE: '\\' 'x'  HEX_DIGIT HEX_DIGIT;
 
-LITTLE_U_VALUE: '\\' 'u' HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT;
+//LITTLE_U_VALUE: '\\' 'u' HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT;
 
-BIG_U_VALUE: '\\' 'U' HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT;
+//BIG_U_VALUE: '\\' 'U' HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT;
 
 // String literals
 
 RAW_STRING_LIT         : '`' ~'`'*                      '`' -> mode(NLSEMI);
-INTERPRETED_STRING_LIT : '"' (~["\\] | ESCAPED_VALUE)*  '"' -> mode(NLSEMI);
+INTERPRETED_STRING_LIT : '"' (~["\\])*  '"' -> mode(NLSEMI);
+
+// INTERPRETED_STRING_LIT : '"' (~["\\] | ESCAPED_VALUE)*  '"' -> mode(NLSEMI);
+
 // Hidden tokens
 WS                     : [ \t]+             -> channel(HIDDEN);
 COMMENT                : '/*' .*? '*/'      -> channel(HIDDEN);
 TERMINATOR             : [\r\n]+            -> channel(HIDDEN);
 LINE_COMMENT           : '//' ~[\r\n]*      -> channel(HIDDEN);
 
-fragment UNICODE_VALUE: ~[\r\n'] | LITTLE_U_VALUE | BIG_U_VALUE | ESCAPED_VALUE;
+//fragment UNICODE_VALUE: ~[\r\n'] | LITTLE_U_VALUE | BIG_U_VALUE | ESCAPED_VALUE;
 // Fragments
-fragment ESCAPED_VALUE
-    : '\\' ('u' HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT
-           | 'U' HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT
-           | [abfnrtv\\'"]
-           | OCTAL_DIGIT OCTAL_DIGIT OCTAL_DIGIT
-           | 'x' HEX_DIGIT HEX_DIGIT)
-    ;
+// fragment ESCAPED_VALUE
+//     : '\\' ('u' HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT
+//            | 'U' HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT
+//            | [abfnrtv\\'"]
+//            | OCTAL_DIGIT OCTAL_DIGIT OCTAL_DIGIT
+//            | 'x' HEX_DIGIT HEX_DIGIT)
+//     ;
+
+// fragment OCTAL_DIGIT
+//     : [0-7]
+//     ;
+// fragment HEX_DIGIT
+//     : [0-9a-fA-F]
+//     ;
+// fragment BIN_DIGIT
+//     : [01]
+//     ;
 fragment DECIMALS
     : [0-9] ('_'? [0-9])*
     ;
-fragment OCTAL_DIGIT
-    : [0-7]
-    ;
-fragment HEX_DIGIT
-    : [0-9a-fA-F]
-    ;
-fragment BIN_DIGIT
-    : [01]
-    ;
+
 fragment EXPONENT
     : [eE] [+-]? DECIMALS
     ;
+
 fragment LETTER
     : [a-z]
     | [A-Z]
     | '_'
     ;
+
+/*
+    Customize Tokens for us
+ */
+PRINT : 'fmt.Println';
+SCAN : 'fmt.Scan';
+
 //fragment UNICODE_DIGIT
 //    : [\p{Nd}]
 //    /*  [\u0030-\u0039]
@@ -332,13 +346,7 @@ fragment LETTER
 //    | [\u0EDC-\u0EDD]
 //    | [\u0F00]
 //    | [\u0F40-\u0F6A]
-//    | [\u0F88-\u0F8B]
-//    | [\u1000-\u1021]
-//    | [\u1023-\u1027]
-//    | [\u1029-\u102A]
-//    | [\u1050-\u1055]
-//    | [\u10A0-\u10C5]
-//    | [\u10D0-\u10F6]
+//    | [\u0F88-\u0F8B]<IDENTIFIER>
 //    | [\u1100-\u1159]
 //    | [\u115F-\u11A2]
 //    | [\u11A8-\u11F9]
@@ -456,6 +464,7 @@ fragment LETTER
 //    | [\uFFDA-\uFFDC]
 //    */
 //    ;
+
 mode NLSEMI;
 // Treat whitespace as normal
 WS_NLSEMI                     : [ \t]+             -> channel(HIDDEN);
