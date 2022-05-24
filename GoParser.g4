@@ -1,30 +1,3 @@
-/*
- [The "BSD licence"] Copyright (c) 2017 Sasa Coh, Michał Błotniak Copyright (c) 2019 Ivan Kochurkin,
- kvanttt@gmail.com, Positive Technologies Copyright (c) 2019 Dmitry Rassadin,
- flipparassa@gmail.com,Positive Technologies All rights reserved. Copyright (c) 2021 Martin Mirchev,
- mirchevmartin2203@gmail.com
-
- Redistribution and use in source and binary forms, with or without modification, are permitted
- provided that the following conditions are met: 1. Redistributions of source code must retain the
- above copyright notice, this list of conditions and the following disclaimer. 2. Redistributions in
- binary form must reproduce the above copyright notice, this list of conditions and the following
- disclaimer in the documentation and/or other materials provided with the distribution. 3. The name
- of the author may not be used to endorse or promote products derived from this software without
- specific prior written permission.
-
- THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING,
- BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
- SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
- NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
- POSSIBILITY OF SUCH DAMAGE.
- */
-
-/*
- * A Go grammar for ANTLR 4 derived from the Go Language Specification https://golang.org/ref/spec
- */
 
 parser grammar GoParser;
 
@@ -33,20 +6,7 @@ options {
 	//superClass = GoParserBase;
 }
 
-sourceFile:
-	packageClause eos (importDecl eos)* (
-		(functionDecl | methodDecl | declaration) eos
-	)* EOF;
-
-packageClause: PACKAGE packageName = IDENTIFIER;
-
-importDecl:
-	IMPORT (importSpec | L_PAREN (importSpec eos)* R_PAREN);
-
-importSpec: alias = (DOT | IDENTIFIER)? importPath;
-
-importPath: string_;
-
+//DECLARACAO DE CONSTANTES, TIPOS CONJUNTOS E VARIAVEIS SIMPLES
 declaration: constDecl | typeDecl | varDecl;
 
 constDecl: CONST (constSpec | L_PAREN (constSpec eos)* R_PAREN);
@@ -61,7 +21,8 @@ typeDecl: TYPE (typeSpec | L_PAREN (typeSpec eos)* R_PAREN);
 
 typeSpec: IDENTIFIER ASSIGN? type_;
 
-// Function declarations
+
+// DECLARACAO DE FUNCAO
 
 functionDecl: FUNC IDENTIFIER (signature block?);
 
@@ -69,6 +30,7 @@ methodDecl: FUNC receiver IDENTIFIER ( signature block?);
 
 receiver: parameters;
 
+//TIPO VAR (DEIXA OU TIRA?)
 varDecl: VAR (varSpec | L_PAREN (varSpec eos)* R_PAREN);
 
 varSpec:
@@ -77,29 +39,26 @@ varSpec:
 		| ASSIGN expressionList
 	);
 
+//BLOCO DE STATUS
 block: L_CURLY statementList? R_CURLY;
 
 statementList: ((SEMI? | EOS? ) statement eos)+;
 
+//STATUS
 statement:
 	declaration
 	| labeledStmt
 	| simpleStmt
-	| goStmt
 	| returnStmt
 	| breakStmt
 	| continueStmt
-	| gotoStmt
 	| fallthroughStmt
 	| block
 	| ifStmt
 	| switchStmt
-	| selectStmt
-	| forStmt
-	| deferStmt;
+	| forStmt;
 
 simpleStmt:
-	sendStmt
 	| incDecStmt
 	| assignment
 	| expressionStmt
@@ -107,10 +66,9 @@ simpleStmt:
 
 expressionStmt: expression;
 
-sendStmt: channel = expression RECEIVE expression;
-
 incDecStmt: expression (PLUS_PLUS | MINUS_MINUS);
 
+//DECLARACAO MULTIPLA x, y, z = 1, 2, 3
 assignment: expressionList assign_op expressionList;
 
 assign_op: (
@@ -127,6 +85,7 @@ assign_op: (
 		| BIT_CLEAR
 	)? ASSIGN;
 
+//DECLARACAO IMPLICITA x := 0 (FAZ ELE SER INT)
 shortVarDecl: identifierList DECLARE_ASSIGN expressionList;
 
 emptyStmt: EOS | SEMI;
@@ -139,12 +98,9 @@ breakStmt: BREAK IDENTIFIER?;
 
 continueStmt: CONTINUE IDENTIFIER?;
 
-gotoStmt: GOTO IDENTIFIER;
-
 fallthroughStmt: FALLTHROUGH;
 
-deferStmt: DEFER expression;
-
+//CLAUSULA DO IF 
 ifStmt:
 	IF ( expression
 			| eos expression
@@ -153,6 +109,7 @@ ifStmt:
 		ELSE (ifStmt | block)
 	)?;
 
+//CLAUSULA DO SWITCH E TYPESWITCH 
 switchStmt: exprSwitchStmt | typeSwitchStmt;
 
 exprSwitchStmt:
@@ -178,25 +135,20 @@ typeSwitchCase: CASE typeList | DEFAULT;
 
 typeList: (type_ | NIL_LIT) (COMMA (type_ | NIL_LIT))*;
 
-selectStmt: SELECT L_CURLY commClause* R_CURLY;
-
-commClause: commCase COLON statementList?;
-
-commCase: CASE (sendStmt | recvStmt) | DEFAULT;
-
 recvStmt: (expressionList ASSIGN | identifierList DECLARE_ASSIGN)? recvExpr = expression;
+
+//CLAUSULA DO FOR()
 
 forStmt: FOR (expression? | forClause | rangeClause?) block;
 
 forClause:
 	initStmt = simpleStmt? eos expression? eos postStmt = simpleStmt?;
 
+//CLAUSULA DO RANGE
 rangeClause: (
 		expressionList ASSIGN
 		| identifierList DECLARE_ASSIGN
 	)? RANGE expression;
-
-goStmt: GO expression;
 
 type_: typeName | typeLit | L_PAREN type_ R_PAREN;
 
@@ -204,13 +156,9 @@ typeName: qualifiedIdent | IDENTIFIER;
 
 typeLit:
 	arrayType
-	| structType
-	| pointerType
 	| functionType
-	| interfaceType
 	| sliceType
-	| mapType
-	| channelType;
+	| mapType;
 
 arrayType: L_BRACKET arrayLength R_BRACKET elementType;
 
@@ -218,17 +166,10 @@ arrayLength: expression;
 
 elementType: type_;
 
-pointerType: STAR type_;
-
-interfaceType:
-	INTERFACE L_CURLY ((methodSpec | typeName) eos)* R_CURLY;
-
 sliceType: L_BRACKET R_BRACKET elementType;
 
 // It's possible to replace `type` with more restricted typeLit list and also pay attention to nil maps
 mapType: MAP L_BRACKET type_ R_BRACKET elementType;
-
-channelType: (CHAN | CHAN RECEIVE | RECEIVE CHAN) elementType;
 
 methodSpec:
 	IDENTIFIER parameters result
@@ -256,16 +197,12 @@ expression:
 		| CARET
 		| STAR
 		| AMPERSAND
-		| RECEIVE
 	) expression
 	| expression mul_op = (
 		STAR
 		| DIV
 		| MOD
-		| LSHIFT
-		| RSHIFT
 		| AMPERSAND
-		| BIT_CLEAR
 	) expression
 	| expression add_op = (PLUS | MINUS | OR | CARET) expression
 	| expression rel_op = (
@@ -307,12 +244,7 @@ basicLit:
 	| FLOAT_LIT;
 
 integer:
-	DECIMAL_LIT
-	| BINARY_LIT
-	| OCTAL_LIT
-	| HEX_LIT
-	| IMAGINARY_LIT
-	| RUNE_LIT;
+	DECIMAL_LIT;
 
 operandName: IDENTIFIER;
 
@@ -320,10 +252,10 @@ qualifiedIdent: IDENTIFIER DOT IDENTIFIER;
 
 compositeLit: literalType literalValue;
 
+//TIPOS LITERAIS
 literalType:
 	structType
 	| arrayType
-	| L_BRACKET ELLIPSIS R_BRACKET elementType
 	| sliceType
 	| mapType
 	| typeName;
@@ -338,6 +270,7 @@ key: expression | literalValue;
 
 element: expression | literalValue;
 
+//TIPO STRUCT
 structType: STRUCT L_CURLY (fieldDecl eos)* R_CURLY;
 
 fieldDecl: (
@@ -363,7 +296,7 @@ typeAssertion: DOT L_PAREN type_ R_PAREN;
 
 arguments:
 	L_PAREN (
-		(expressionList | nonNamedType (COMMA expressionList)?) ELLIPSIS? COMMA?
+		(expressionList | nonNamedType (COMMA expressionList)?) COMMA?
 	)? R_PAREN;
 
 methodExpr: nonNamedType DOT IDENTIFIER;
