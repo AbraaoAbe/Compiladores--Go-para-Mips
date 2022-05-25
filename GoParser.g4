@@ -64,6 +64,7 @@ statement:
 
 simpleStmt:
 	incDecStmt
+	| ioStmt
 	| assignment
 	| expressionStmt
 	| shortVarDecl
@@ -159,6 +160,7 @@ typeName: qualifiedIdent | IDENTIFIER;
 
 typeLit:
 	arrayType
+	| structType
 	| functionType
 	| sliceType
 	| mapType;

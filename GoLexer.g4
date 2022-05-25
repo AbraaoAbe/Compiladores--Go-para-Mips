@@ -15,7 +15,7 @@ STRUCT                 : 'struct';
 // CHAN                   : 'chan';
 ELSE                   : 'else';
 // GOTO                   : 'goto';
-PACKAGE                : 'package main' -> skip;
+PACKAGE                : 'package '([a-zA-Z])* -> skip;
 
 SWITCH                 : 'switch';
 CONST                  : 'const';

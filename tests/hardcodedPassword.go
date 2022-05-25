@@ -3,12 +3,14 @@ package samples
 import "fmt"
 
 type HpType struct {
+	name  string
+	idade int
 }
 
 func (c HpType) HP() {
 	password := `hardcoded`
 	// var password = "hardcoded"
-	fmt.Printf("Hello, world\nYou type the password=%v\n", password)
+	fmt.Println("Hello, worldYou type the password=v", password)
 	letters := []string{"a", "b", "c", "d"}
 	// shadowing previous same decl
 	// var letters []string

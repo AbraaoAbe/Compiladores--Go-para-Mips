@@ -3,7 +3,7 @@ package main
 import "fmt"
 
 func main(){
-	default := "grupo 3"
+	default := "grupo 5"
 
 	fmt.Println(default)
 }

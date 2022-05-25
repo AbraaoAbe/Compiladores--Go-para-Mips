@@ -1,8 +1,6 @@
 package samples
 
-import (
-	"fmt"
-)
+import "fmt"
 
 func SliceDecls() {
 	primes := [6]int{2, 3, 5, 7, 11, 13}
@@ -35,7 +33,7 @@ func SliceDecls() {
 
 	l = s[2:]
 	fmt.Println("sl3:", l)
-	
+
 	t := []string{"g", "h", "i"}
 	fmt.Println("dcl:", t)
 
@@ -44,7 +42,7 @@ func SliceDecls() {
 		innerLen := i + 1
 		twoD[i] = make([]int, innerLen)
 		for j := 0; j < innerLen; j++ {
-		    twoD[i][j] = i + j
+			twoD[i][j] = i + j
 		}
 	}
 	fmt.Println("2d: ", twoD)
