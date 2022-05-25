@@ -1,9 +1,8 @@
-
 parser grammar GoParser;
 
 options {
 	tokenVocab = GoLexer;
-	//superClass = GoParserBase;
+	superClass = GoParserBase;
 }
 
 //DECLARACAO DE CONSTANTES, TIPOS CONJUNTOS E VARIAVEIS SIMPLES
@@ -42,7 +41,8 @@ varSpec:
 //BLOCO DE STATUS
 block: L_CURLY statementList? R_CURLY;
 
-statementList: ((SEMI? | EOS? ) statement eos)+;
+//statementList: (statement eos)+;
+statementList: ((SEMI? | {closingBracket()}?) statement)+;
 
 //STATUS
 statement:
@@ -59,7 +59,7 @@ statement:
 	| forStmt;
 
 simpleStmt:
-	| incDecStmt
+	incDecStmt
 	| assignment
 	| expressionStmt
 	| shortVarDecl;
@@ -79,10 +79,6 @@ assign_op: (
 		| STAR
 		| DIV
 		| MOD
-		| LSHIFT
-		| RSHIFT
-		| AMPERSAND
-		| BIT_CLEAR
 	)? ASSIGN;
 
 //DECLARACAO IMPLICITA x := 0 (FAZ ELE SER INT)
@@ -171,12 +167,18 @@ sliceType: L_BRACKET R_BRACKET elementType;
 // It's possible to replace `type` with more restricted typeLit list and also pay attention to nil maps
 mapType: MAP L_BRACKET type_ R_BRACKET elementType;
 
+//methodSpec:
+//	{noTerminatorAfterParams(2)}? IDENTIFIER parameters result
+//	| IDENTIFIER parameters;
 methodSpec:
 	IDENTIFIER parameters result
 	| IDENTIFIER parameters;
 
 functionType: FUNC signature;
 
+//signature:
+//	{noTerminatorAfterParams(1)}? parameters result
+//	| parameters;
 signature:
 	parameters result
 	| parameters;
@@ -186,7 +188,7 @@ result: parameters | type_;
 parameters:
 	L_PAREN (parameterDecl (COMMA parameterDecl)* COMMA?)? R_PAREN;
 
-parameterDecl: identifierList? ELLIPSIS? type_;
+parameterDecl: identifierList? type_;
 
 expression:
 	primaryExpr
@@ -196,13 +198,11 @@ expression:
 		| EXCLAMATION
 		| CARET
 		| STAR
-		| AMPERSAND
 	) expression
 	| expression mul_op = (
 		STAR
 		| DIV
 		| MOD
-		| AMPERSAND
 	) expression
 	| expression add_op = (PLUS | MINUS | OR | CARET) expression
 	| expression rel_op = (
@@ -273,6 +273,10 @@ element: expression | literalValue;
 //TIPO STRUCT
 structType: STRUCT L_CURLY (fieldDecl eos)* R_CURLY;
 
+//fieldDecl: (
+//		{noTerminatorBetween(2)}? identifierList type_
+//		| embeddedField
+//	) tag = string_?;
 fieldDecl: (
 		identifierList type_
 		| embeddedField
@@ -309,4 +313,10 @@ eos:
 	SEMI
 	| EOF
 	| EOS
+	| {closingBracket()}?
 	;
+//eos:
+//	SEMI
+//	| EOF
+//	| EOS
+//	;

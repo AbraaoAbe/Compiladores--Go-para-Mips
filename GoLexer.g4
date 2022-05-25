@@ -15,7 +15,8 @@ STRUCT                 : 'struct';
 // CHAN                   : 'chan';
 ELSE                   : 'else';
 // GOTO                   : 'goto';
-// PACKAGE                : 'package';
+PACKAGE                : 'package main' -> skip;
+
 SWITCH                 : 'switch';
 CONST                  : 'const';
 FALLTHROUGH            : 'fallthrough' -> mode(NLSEMI);
@@ -24,7 +25,7 @@ RANGE                  : 'range';
 TYPE                   : 'type';
 CONTINUE               : 'continue' -> mode(NLSEMI);
 FOR                    : 'for';
-// IMPORT                 : 'import';
+ IMPORT                 : 'import "fmt"' -> skip;
 RETURN                 : 'return' -> mode(NLSEMI);
 VAR                    : 'var';
 
