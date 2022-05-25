@@ -4,7 +4,7 @@ JAVA=java
 JAVAC=javac
 
 ROOT=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
-
+#ROOT=/home/igor/Desktop/UFES/7\ Período-EART/Compiladores/CP1
 # Certifique-se de que o antlr esteja instalado em /usr/local/lib
 
 ANTLR_PATH=/usr/local/lib/antlr-4.10.1-complete.jar
@@ -32,24 +32,31 @@ antlr: GoLexer.g4 GoParser.g4
 
 javac:
 	$(JAVAC) $(CLASS_PATH_OPTION) ParserBase/GoParserBase.java $(GEN_PATH)/*.java
+	cp ParserBase/GoParserBase.class $(GEN_PATH)
 
 # 'Go' é o prefixo comum das duas gramáticas (GoLexer e GoParser).
 # 'sourceFile' é a regra inicial de GoParser.
 run:
-	cp ParserBase/GoParserBase.class $(GEN_PATH)
-	cd $(GEN_PATH) && $(GRUN) Go sourceFile $(FILE) -tokens
+	cd $(GEN_PATH) && $(GRUN) Go sourceFile $(FILE)
+	cd ..
 
-##Rodar com a opção -gui
-#run-debug:
-#	cd $(GEN_PATH) && $(GRUN) Go declaration $(FILE) -gui
-#
-#runall:
-#	-for FILENAME in $(IN)/*.go; do \
-#	 	cd $(GEN_PATH) && \
-#	 	echo -e "\nRunning $${FILENAME}" && \
-#	 	$(GRUN) Go sourceFile $${FILENAME} && \
-#	 	cd .. ; \
-#	done;
+# Executa o grun com a opção de mostrar os tokens
+run-tokens:
+	cd $(GEN_PATH) && $(GRUN) Go sourceFile $(FILE) -tokens
+	cd ..
+
+# Executa o grun com a opção de mostrar a árvore com GUI
+run-gui:
+	cd $(GEN_PATH) && $(GRUN) Go sourceFile $(FILE) -gui
+	cd ..
+
+runall:
+	-for FILENAME in $(IN)/*.go; do \
+	 	cd $(GEN_PATH) && \
+	 	echo -e "\nRunning $${FILENAME}" && \
+	 	$(GRUN) Go sourceFile $${FILENAME} && \
+	 	cd .. ; \
+	done;
 
 clean:
 	@rm -rf $(GEN_PATH)
