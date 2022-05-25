@@ -4,7 +4,7 @@ lexer grammar GoLexer;
 
 BREAK                  : 'break' -> mode(NLSEMI);
 DEFAULT                : 'default';
-FUNC                   : 'func';
+FUNC                   : 'func' | PRINT | SCAN;
 // INTERFACE              : 'interface';
 SELECT                 : 'select';
 CASE                   : 'case';
@@ -180,8 +180,8 @@ fragment LETTER
 /*
     Customize Tokens for us
  */
-PRINT : 'fmt.Println';
-SCAN : 'fmt.Scan';
+fragment PRINT : 'fmt.Println';
+fragment SCAN : 'fmt.Scan';
 
 //fragment UNICODE_DIGIT
 //    : [\p{Nd}]

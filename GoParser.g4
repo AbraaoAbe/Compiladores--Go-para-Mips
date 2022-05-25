@@ -5,6 +5,10 @@ options {
 	superClass = GoParserBase;
 }
 
+sourceFile:
+	((functionDecl | methodDecl | declaration) eos
+	)* EOF;
+
 //DECLARACAO DE CONSTANTES, TIPOS CONJUNTOS E VARIAVEIS SIMPLES
 declaration: constDecl | typeDecl | varDecl;
 
@@ -41,8 +45,8 @@ varSpec:
 //BLOCO DE STATUS
 block: L_CURLY statementList? R_CURLY;
 
-//statementList: (statement eos)+;
-statementList: ((SEMI? | {closingBracket()}?) statement)+;
+statementList: (statement eos)+;
+//statementList: ((SEMI? | {closingBracket()}?) statement)+;
 
 //STATUS
 statement:
@@ -167,18 +171,15 @@ sliceType: L_BRACKET R_BRACKET elementType;
 // It's possible to replace `type` with more restricted typeLit list and also pay attention to nil maps
 mapType: MAP L_BRACKET type_ R_BRACKET elementType;
 
-//methodSpec:
-//	{noTerminatorAfterParams(2)}? IDENTIFIER parameters result
-//	| IDENTIFIER parameters;
 methodSpec:
 	IDENTIFIER parameters result
 	| IDENTIFIER parameters;
 
 functionType: FUNC signature;
+// func main()
+// fmt.Println()
+// fmt.Scan()
 
-//signature:
-//	{noTerminatorAfterParams(1)}? parameters result
-//	| parameters;
 signature:
 	parameters result
 	| parameters;
@@ -241,10 +242,13 @@ basicLit:
 	NIL_LIT
 	| integer
 	| string_
-	| FLOAT_LIT;
+	| float;
 
 integer:
 	DECIMAL_LIT;
+
+float:
+    FLOAT_LIT;
 
 operandName: IDENTIFIER;
 
@@ -286,7 +290,7 @@ string_: RAW_STRING_LIT | INTERPRETED_STRING_LIT;
 
 embeddedField: STAR? typeName;
 
-functionLit: FUNC signature block; // function
+functionLit: FUNC (signature block?); // function
 
 index: L_BRACKET expression R_BRACKET;
 
