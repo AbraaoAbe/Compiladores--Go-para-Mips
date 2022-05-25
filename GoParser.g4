@@ -76,7 +76,6 @@ expressionStmt: expression;
 
 incDecStmt: expression (PLUS_PLUS | MINUS_MINUS);
 
-//DECLARACAO MULTIPLA x, y, z = 1, 2, 3
 assignment: expressionList assign_op expressionList;
 
 assign_op: (
@@ -173,7 +172,6 @@ elementType: type_;
 
 sliceType: L_BRACKET R_BRACKET elementType;
 
-// It's possible to replace `type` with more restricted typeLit list and also pay attention to nil maps
 mapType: MAP L_BRACKET type_ R_BRACKET elementType;
 
 methodSpec:
@@ -324,8 +322,3 @@ eos:
 	| EOS
 	| {closingBracket()}?
 	;
-//eos:
-//	SEMI
-//	| EOF
-//	| EOS
-//	;
