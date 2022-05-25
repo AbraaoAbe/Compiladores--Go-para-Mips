@@ -37,19 +37,19 @@ javac:
 # 'sourceFile' é a regra inicial de GoParser.
 run:
 	cp ParserBase/GoParserBase.class $(GEN_PATH)
-	cd $(GEN_PATH) && $(GRUN) Go declaration $(FILE)
+	cd $(GEN_PATH) && $(GRUN) Go sourceFile $(FILE) -tokens
 
-#Rodar com a opção -gui
-run-debug:
-	cd $(GEN_PATH) && $(GRUN) Go declaration $(FILE) -gui
-
-runall:
-	-for FILENAME in $(IN)/*.go; do \
-	 	cd $(GEN_PATH) && \
-	 	echo -e "\nRunning $${FILENAME}" && \
-	 	$(GRUN) Go sourceFile $${FILENAME} && \
-	 	cd .. ; \
-	done;
+##Rodar com a opção -gui
+#run-debug:
+#	cd $(GEN_PATH) && $(GRUN) Go declaration $(FILE) -gui
+#
+#runall:
+#	-for FILENAME in $(IN)/*.go; do \
+#	 	cd $(GEN_PATH) && \
+#	 	echo -e "\nRunning $${FILENAME}" && \
+#	 	$(GRUN) Go sourceFile $${FILENAME} && \
+#	 	cd .. ; \
+#	done;
 
 clean:
 	@rm -rf $(GEN_PATH)
