@@ -19,8 +19,8 @@ GEN_PATH=src-parser
 
 # Diretório para os casos de teste
 DATA=$(ROOT)/tests
-IN=$(DATA)/in
-FILE=$(IN)/in.go
+IN=$(DATA)
+FILE=$(IN)/foreachStmts.go
 
 all: antlr javac
 	@echo "Done."

@@ -66,7 +66,10 @@ simpleStmt:
 	incDecStmt
 	| assignment
 	| expressionStmt
-	| shortVarDecl;
+	| shortVarDecl
+	;
+
+ioStmt: (SCAN | PRINT) arguments;
 
 expressionStmt: expression;
 
