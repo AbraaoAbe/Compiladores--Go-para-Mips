@@ -4,7 +4,6 @@ JAVA=java
 JAVAC=javac
 
 ROOT=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
-#ROOT=/home/igor/Desktop/UFES/7\ Período-EART/Compiladores/CP1
 # Certifique-se de que o antlr esteja instalado em /usr/local/lib
 
 ANTLR_PATH=/usr/local/lib/antlr-4.10.1-complete.jar
@@ -50,6 +49,7 @@ run-gui:
 	cd $(GEN_PATH) && $(GRUN) Go sourceFile $(FILE) -gui
 	cd ..
 
+# Executa todos os testes
 runall:
 	-for FILENAME in $(IN)/*.go; do \
 	 	cd $(GEN_PATH) && \

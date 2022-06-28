@@ -242,10 +242,10 @@ operand: literal | operandName | L_PAREN expression R_PAREN;
 literal: basicLit | compositeLit | functionLit;
 
 basicLit:
-	NIL_LIT
-	| integer
-	| string_
-	| float;
+	NIL_LIT     #nullType
+	| integer   #intType
+	| string_   #stringType
+	| float     #floatType;
 
 integer:
 	DECIMAL_LIT;

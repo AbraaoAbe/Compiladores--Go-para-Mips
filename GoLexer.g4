@@ -113,7 +113,7 @@ fragment LETTER
     ;
 
 /*
-    Customize Tokens for us
+    Customize Tokens for IO opertations
  */
 PRINT : 'fmt.Println';
 SCAN : 'fmt.Scan';
