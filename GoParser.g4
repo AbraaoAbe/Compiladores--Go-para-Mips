@@ -67,7 +67,7 @@ simpleStmt:
 	| ioStmt
 	| assignment
 	| expressionStmt
-	| shortVarDecl
+//	| shortVarDecl
 	;
 
 ioStmt: (SCAN | PRINT) arguments;
@@ -89,7 +89,7 @@ assign_op: (
 	)? ASSIGN;
 
 //DECLARACAO IMPLICITA x := 0 (FAZ ELE SER INT)
-shortVarDecl: identifierList DECLARE_ASSIGN expressionList;
+//shortVarDecl: identifierList DECLARE_ASSIGN expressionList;
 
 emptyStmt: EOS | SEMI;
 
@@ -130,15 +130,19 @@ typeSwitchStmt:
 					| simpleStmt eos typeSwitchGuard)
 					 L_CURLY typeCaseClause* R_CURLY;
 
-typeSwitchGuard: (IDENTIFIER DECLARE_ASSIGN)? primaryExpr DOT L_PAREN TYPE R_PAREN;
+typeSwitchGuard: primaryExpr DOT L_PAREN TYPE R_PAREN;
+//typeSwitchGuard: (IDENTIFIER DECLARE_ASSIGN)? primaryExpr DOT L_PAREN TYPE R_PAREN;
 
 typeCaseClause: typeSwitchCase COLON statementList?;
 
 typeSwitchCase: CASE typeList | DEFAULT;
 
-typeList: (type_ | NIL_LIT) (COMMA (type_ | NIL_LIT))*;
+typeList: (type_) (COMMA (type_))*;
+//typeList: (type_ | NIL_LIT) (COMMA (type_ | NIL_LIT))*;
 
-recvStmt: (expressionList ASSIGN | identifierList DECLARE_ASSIGN)? recvExpr = expression;
+// Removi o DECLARE_ASSIGN do lexer
+recvStmt: (expressionList ASSIGN)? recvExpr = expression;
+//recvStmt: (expressionList ASSIGN | identifierList DECLARE_ASSIGN)? recvExpr = expression;
 
 //CLAUSULA DO FOR()
 
@@ -148,9 +152,10 @@ forClause:
 	initStmt = simpleStmt? eos expression? eos postStmt = simpleStmt?;
 
 //CLAUSULA DO RANGE
+// Removi o DECLARE_ASSIGN do lexer
 rangeClause: (
 		expressionList ASSIGN
-		| identifierList DECLARE_ASSIGN
+//		| identifierList DECLARE_ASSIGN
 	)? RANGE expression;
 
 type_: typeName | typeLit | L_PAREN type_ R_PAREN;
@@ -242,8 +247,8 @@ operand: literal | operandName | L_PAREN expression R_PAREN;
 literal: basicLit | compositeLit | functionLit;
 
 basicLit:
-	NIL_LIT     #nullType
-	| integer   #intType
+//	NIL_LIT     #nullType
+	integer   #intType
 	| string_   #stringType
 	| float     #floatType;
 

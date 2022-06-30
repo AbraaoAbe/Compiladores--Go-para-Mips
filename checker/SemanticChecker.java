@@ -24,8 +24,8 @@ import static typing.Conv.I2R;
 import static typing.Type.BOOL_TYPE;
 import static typing.Type.INT_TYPE;
 import static typing.Type.NO_TYPE;
-import static typing.Type.REAL_TYPE;
-import static typing.Type.STR_TYPE;
+import static typing.Type.FLOAT_TYPE;
+import static typing.Type.STRING_TYPE;
 
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.TerminalNode;
@@ -209,7 +209,7 @@ public class SemanticChecker extends EZParserBaseVisitor<AST> {
 	// Visita a regra type_spec: REAL
 	@Override
 	public AST visitRealType(EZParser.RealTypeContext ctx) {
-		this.lastDeclType = Type.REAL_TYPE;
+		this.lastDeclType = Type.FLOAT_TYPE;
 		// Não tem problema retornar null aqui porque o método chamador
     	// ignora o valor de retorno.
 		return null;
@@ -218,7 +218,7 @@ public class SemanticChecker extends EZParserBaseVisitor<AST> {
 	// Visita a regra type_spec: STRING
 	@Override
 	public AST visitStrType(EZParser.StrTypeContext ctx) {
-		this.lastDeclType = Type.STR_TYPE;
+		this.lastDeclType = Type.STRING_TYPE;
 		// Não tem problema retornar null aqui porque o método chamador
     	// ignora o valor de retorno.
 		return null;
@@ -272,13 +272,13 @@ public class SemanticChecker extends EZParserBaseVisitor<AST> {
     	Type rt = r.type;
 
         if (lt == BOOL_TYPE && rt != BOOL_TYPE) typeError(lineNo, ":=", lt, rt);
-        if (lt == STR_TYPE  && rt != STR_TYPE)  typeError(lineNo, ":=", lt, rt);
+        if (lt == STRING_TYPE  && rt != STRING_TYPE)  typeError(lineNo, ":=", lt, rt);
         if (lt == INT_TYPE  && rt != INT_TYPE)  typeError(lineNo, ":=", lt, rt);
 
-        if (lt == REAL_TYPE) {
+        if (lt == FLOAT_TYPE) {
         	if (rt == INT_TYPE) {
         		r = Conv.createConvNode(I2R, r);
-        	} else if (rt != REAL_TYPE) {
+        	} else if (rt != FLOAT_TYPE) {
         		typeError(lineNo, ":=", lt, rt);
             }
         }
@@ -521,7 +521,7 @@ public class SemanticChecker extends EZParserBaseVisitor<AST> {
 	public AST visitExprRealVal(ExprRealValContext ctx) {
 		// Fim da recursão, converte o lexema da constante real.
 		float floatData = Float.parseFloat(ctx.getText());
-		return new AST(REAL_VAL_NODE, floatData, REAL_TYPE);
+		return new AST(REAL_VAL_NODE, floatData, FLOAT_TYPE);
 	}
 
 	@Override
@@ -530,7 +530,7 @@ public class SemanticChecker extends EZParserBaseVisitor<AST> {
 		// Adiciona a string na tabela de strings.
 		int idx = st.addStr(ctx.STR_VAL().getText());
 		// Campo 'data' do nó da AST guarda o índice na tabela.
-		return new AST(STR_VAL_NODE, idx, STR_TYPE);
+		return new AST(STR_VAL_NODE, idx, STRING_TYPE);
 	}
 
 	@Override

@@ -24,7 +24,8 @@ IMPORT                 : 'import "fmt"' -> skip;
 RETURN                 : 'return' -> mode(NLSEMI);
 VAR                    : 'var';
 
-NIL_LIT                : 'nil' -> mode(NLSEMI);
+// Remover o NULL
+//NIL_LIT                : 'nil' -> mode(NLSEMI);
 
 IDENTIFIER             : LETTER (LETTER | DECIMALS)* -> mode(NLSEMI);
 
@@ -43,7 +44,6 @@ COLON                  : ':';
 DOT                    : '.';
 PLUS_PLUS              : '++' -> mode(NLSEMI);
 MINUS_MINUS            : '--' -> mode(NLSEMI);
-DECLARE_ASSIGN         : ':=';
 
 // Logical
 
