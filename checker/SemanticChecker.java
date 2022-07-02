@@ -31,27 +31,27 @@ import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
 import ast.AST;
-import parser.EZParser;
-import parser.EZParser.Assign_stmtContext;
-import parser.EZParser.EqLtContext;
-import parser.EZParser.ExprFalseContext;
-import parser.EZParser.ExprIdContext;
-import parser.EZParser.ExprIntValContext;
-import parser.EZParser.ExprParContext;
-import parser.EZParser.ExprRealValContext;
-import parser.EZParser.ExprStrValContext;
-import parser.EZParser.ExprTrueContext;
-import parser.EZParser.If_stmtContext;
-import parser.EZParser.PlusMinusContext;
-import parser.EZParser.ProgramContext;
-import parser.EZParser.Read_stmtContext;
-import parser.EZParser.Repeat_stmtContext;
-import parser.EZParser.StmtContext;
-import parser.EZParser.Stmt_sectContext;
-import parser.EZParser.TimesOverContext;
-import parser.EZParser.Vars_sectContext;
-import parser.EZParser.Write_stmtContext;
-import parser.EZParserBaseVisitor;
+import parser.GoParser;
+import parser.GoParser.Assign_stmtContext;
+import parser.GoParser.EqLtContext;
+import parser.GoParser.ExprFalseContext;
+import parser.GoParser.ExprIdContext;
+import parser.GoParser.ExprIntValContext;
+import parser.GoParser.ExprParContext;
+import parser.GoParser.ExprRealValContext;
+import parser.GoParser.ExprStrValContext;
+import parser.GoParser.ExprTrueContext;
+import parser.GoParser.If_stmtContext;
+import parser.GoParser.PlusMinusContext;
+import parser.GoParser.ProgramContext;
+import parser.GoParser.Read_stmtContext;
+import parser.GoParser.Repeat_stmtContext;
+import parser.GoParser.StmtContext;
+import parser.GoParser.Stmt_sectContext;
+import parser.GoParser.TimesOverContext;
+import parser.GoParser.Vars_sectContext;
+import parser.GoParser.Write_stmtContext;
+import parser.GoParserBaseVisitor;
 import tables.StrTable;
 import tables.VarTable;
 import typing.Conv;
@@ -81,7 +81,7 @@ import typing.Type;
  * as ações semânticas do parser já faziam a construção da AST junto com a análise
  * sintática. Aqui, é o inverso, por isso temos que visitar os filhos primeiro.
  */
-public class SemanticChecker extends EZParserBaseVisitor<AST> {
+public class SemanticChecker extends GoParserBaseVisitor<AST> {
 
 	private StrTable st = new StrTable();   // Tabela de strings.
     private VarTable vt = new VarTable();   // Tabela de variáveis.
@@ -156,17 +156,49 @@ public class SemanticChecker extends EZParserBaseVisitor<AST> {
 
     // ----------------------------------------------------------------------------
     // Visitadores.
-
-    // Visita a regra program: PROGRAM ID SEMI vars_sect stmt_sect
+	
+	// Visita a regra sourceFile: ((functionDecl) eos)* EOF #funcDeclLoop
+	//							| ((methodDecl) eos)* EOF #methDeclLoop
+	//							| ((declaration) eos)* EOF #DeclvarLoop;
     @Override
-	public AST visitProgram(ProgramContext ctx) {
-    	// Visita recursivamente os filhos para construir a AST.
-    	AST varsSect = visit(ctx.vars_sect());
-    	AST stmtSect = visit(ctx.stmt_sect());
+	public AST visitSourceFile(SourceFileContext ctx) {
+    	this.root = AST.newSubtree(PROGRAM_NODE, NO_TYPE);
+    	// No caso de não-terminais com fechos (* ou +), a chamada do método
+    	// correspondente retorna uma lista com todos os elementos da Parse
+    	// Tree que entraram no fecho. Assim, podemos percorrer (visitar) a
+    	// lista para construir as subárvores dos filhos.
+    	// Também é possível usar o iterador da lista aqui mas prefiro esse
+    	// estilo de loop clássico...
+
+		//visita o sourceFile: ((functionDecl) eos)* EOF #funcDeclLoop
+    	for (int i = 0; i < ctx.funcDeclLoop().size(); i++) {
+    		AST child = visit(ctx.funcDeclLoop(i));
+    		this.root.addChild(child);
+    	}
+
+		//visita o sourceFile: ((methodDecl) eos)* EOF #methDeclLoop
+    	for (int i = 0; i < ctx.methDeclLoop().size(); i++) {
+    		AST child = visit(ctx.methDeclLoop(i));
+    		this.root.addChild(child);
+    	}
+
+		//visita o sourceFile: ((declaration) eos)* EOF #DeclvarLoop
+    	for (int i = 0; i < ctx.DeclvarLoop().size(); i++) {
+    		AST child = visit(ctx.DeclvarLoop(i));
+    		this.root.addChild(child);
+    	}
+    	
     	// Como esta é a regra inicial, chegamos na raiz da AST.
-    	this.root = AST.newSubtree(PROGRAM_NODE, NO_TYPE, varsSect, stmtSect);
 		return this.root;
 	}
+
+	// Visita a regra constDecl: CONST constSpec #constSpecUniq
+    @Override
+    public AST visitConstSpecUniq(GoParser.ConstSpecUniqContext ctx) {
+    	// Visita a definição do tipo da variável.
+		AST constNode = AST.newSubtree(BLOCK_NODE, NO_TYPE);
+    	visit(ctx.ConstSpecUniq());
+    }
 
     // Visita a regra vars_sect: VAR var_decl*
     @Override
@@ -190,7 +222,7 @@ public class SemanticChecker extends EZParserBaseVisitor<AST> {
 
 	// Visita a regra type_spec: BOOL
     @Override
-    public AST visitBoolType(EZParser.BoolTypeContext ctx) {
+    public AST visitBoolType(GoParser.BoolTypeContext ctx) {
     	this.lastDeclType = Type.BOOL_TYPE;
     	// Não tem problema retornar null aqui porque o método chamador
     	// ignora o valor de retorno.
@@ -199,7 +231,7 @@ public class SemanticChecker extends EZParserBaseVisitor<AST> {
 
 	// Visita a regra type_spec: INT
 	@Override
-	public AST visitIntType(EZParser.IntTypeContext ctx) {
+	public AST visitIntType(GoParser.IntTypeContext ctx) {
 		this.lastDeclType = Type.INT_TYPE;
 		// Não tem problema retornar null aqui porque o método chamador
     	// ignora o valor de retorno.
@@ -208,7 +240,7 @@ public class SemanticChecker extends EZParserBaseVisitor<AST> {
 
 	// Visita a regra type_spec: REAL
 	@Override
-	public AST visitRealType(EZParser.RealTypeContext ctx) {
+	public AST visitRealType(GoParser.RealTypeContext ctx) {
 		this.lastDeclType = Type.FLOAT_TYPE;
 		// Não tem problema retornar null aqui porque o método chamador
     	// ignora o valor de retorno.
@@ -217,16 +249,16 @@ public class SemanticChecker extends EZParserBaseVisitor<AST> {
 
 	// Visita a regra type_spec: STRING
 	@Override
-	public AST visitStrType(EZParser.StrTypeContext ctx) {
+	public AST visitStrType(GoParser.StrTypeContext ctx) {
 		this.lastDeclType = Type.STRING_TYPE;
 		// Não tem problema retornar null aqui porque o método chamador
     	// ignora o valor de retorno.
 		return null;
 	}
 
-    // Visita a regra var_decl: type_spec ID SEMI
+    // Visita a regra typeDecl: type_spec ID SEMI
     @Override
-    public AST visitVar_decl(EZParser.Var_declContext ctx) {
+    public AST visitTypeDecl(GoParser.TypeDeclContext ctx) {
     	// Visita a definição do tipo da variável.
     	visit(ctx.type_spec());
     	// Cria e retorna um nó para a variável.
@@ -416,7 +448,7 @@ public class SemanticChecker extends EZParserBaseVisitor<AST> {
 		r = Conv.createConvNode(unif.rc, r);
 
 		// Olha qual é o operador e cria o nó correspondente na AST.
-		if (ctx.op.getType() == EZParser.TIMES) {
+		if (ctx.op.getType() == GoParser.TIMES) {
 			return AST.newSubtree(TIMES_NODE, unif.type, l, r);
 		} else { // OVER
 			return AST.newSubtree(OVER_NODE, unif.type, l, r);
@@ -435,7 +467,7 @@ public class SemanticChecker extends EZParserBaseVisitor<AST> {
 		Type rt = r.type;
 		Unif unif;
 		// É preciso diferenciar '+' e '-' na unificação por conta da semântica.
-		if (ctx.op.getType() == EZParser.PLUS) {
+		if (ctx.op.getType() == GoParser.PLUS) {
 			unif = lt.unifyPlus(rt);
 		} else {
 			unif = lt.unifyOtherArith(rt);
@@ -451,7 +483,7 @@ public class SemanticChecker extends EZParserBaseVisitor<AST> {
 		r = Conv.createConvNode(unif.rc, r);
 
 		// Olha qual é o operador e cria o nó correspondente na AST.
-		if (ctx.op.getType() == EZParser.PLUS) {
+		if (ctx.op.getType() == GoParser.PLUS) {
 			return AST.newSubtree(PLUS_NODE, unif.type, l, r);
 		} else { // MINUS
 			return AST.newSubtree(MINUS_NODE, unif.type, l, r);
@@ -480,7 +512,7 @@ public class SemanticChecker extends EZParserBaseVisitor<AST> {
 		r = Conv.createConvNode(unif.rc, r);
 
 		// Olha qual é o operador e cria o nó correspondente na AST.
-		if (ctx.op.getType() == EZParser.EQ) {
+		if (ctx.op.getType() == GoParser.EQ) {
 			return AST.newSubtree(EQ_NODE, unif.type, l, r);
 		} else { // LT
 			return AST.newSubtree(LT_NODE, unif.type, l, r);

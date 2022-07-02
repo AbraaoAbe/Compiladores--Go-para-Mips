@@ -5,14 +5,32 @@ options {
 	superClass = GoParserBase;
 }
 
+//Antigo sourceFile 
 sourceFile:
-	((functionDecl | methodDecl | declaration) eos
-	)* EOF;
+	((functionDecl) eos)* EOF #funcDeclLoop
+	| ((methodDecl) eos)* EOF #methDeclLoop
+	| ((declaration) eos)* EOF #DeclvarLoop;
+
+
+//!MODIFICACAO CANCELADA
+//?Modifiquei o sourceFile com intuito de
+//?facilicar a AST, ainda nao testado
+//?Para criar uma regra root sem looping
+//sourceFile:
+//	functionDecl eos EOF #funcDecl
+//	| methodDecl eos EOF #methDecl
+//	| declaration eos EOF #Declvar;
 
 //DECLARACAO DE CONSTANTES, TIPOS CONJUNTOS E VARIAVEIS SIMPLES
-declaration: constDecl | typeDecl | varDecl;
+//Pelo que ta escrito no lab5 nao precisa ser sobrescrito
+declaration: 
+	constDecl 
+	| typeDecl 
+	| varDecl; 
 
-constDecl: CONST (constSpec | L_PAREN (constSpec eos)* R_PAREN);
+constDecl: 
+	CONST constSpec #constSpecUniq
+	| CONST L_PAREN (constSpec eos)* R_PAREN #constSpecLoop;
 
 constSpec: identifierList (type_? ASSIGN expressionList)?;
 
@@ -20,7 +38,9 @@ identifierList: IDENTIFIER (COMMA IDENTIFIER)*;
 
 expressionList: expression (COMMA expression)*;
 
-typeDecl: TYPE (typeSpec | L_PAREN (typeSpec eos)* R_PAREN);
+typeDecl: 
+	TYPE typeSpec #typeDeclUnic
+	|TYPE L_PAREN (typeSpec eos)* R_PAREN #typeDeclLoop; 
 
 typeSpec: IDENTIFIER ASSIGN? type_;
 

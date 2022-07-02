@@ -107,6 +107,11 @@ public enum NodeKind {
             return "write";
         }
 	},
+    CONST_DECL_NODE {
+		public String toString() {
+            return "const_decl";
+        }
+	},
 
     B2I_NODE { // Type conversion.
 		public String toString() {

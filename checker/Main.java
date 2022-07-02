@@ -7,8 +7,8 @@ import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.tree.ParseTree;
 
-import parser.EZLexer;
-import parser.EZParser;
+import parser.GoLexer;
+import parser.GoParser;
 
 public class Main {
 
@@ -28,16 +28,16 @@ public class Main {
 		CharStream input = CharStreams.fromFileName(args[0]);
 		
 		// Cria um lexer que consome a entrada do CharStream.
-		EZLexer lexer = new EZLexer(input);
+		GoLexer lexer = new GoLexer(input);
 		
 		// Cria um buffer de tokens vindos do lexer.
 		CommonTokenStream tokens = new CommonTokenStream(lexer);
 		
 		// Cria um parser que consome os tokens do buffer.
-		EZParser parser = new EZParser(tokens);
+		GoParser parser = new GoParser(tokens);
 		
-		// Começa o processo de parsing na regra 'program'.
-		ParseTree tree = parser.program(); 
+		// Começa o processo de parsing na regra 'sourceFile'.
+		ParseTree tree = parser.sourceFile(); 
 		
 		if (parser.getNumberOfSyntaxErrors() != 0) {
 			// Houve algum erro sintático. Termina a compilação aqui.
