@@ -8,7 +8,7 @@ options {
 //Antigo sourceFile 
 sourceFile:
 	((functionDecl) eos)* EOF #funcDeclLoop
-	| ((methodDecl) eos)* EOF #methDeclLoop
+//	| ((methodDecl) eos)* EOF #methDeclLoop
 	| ((declaration) eos)* EOF #DeclvarLoop;
 
 
@@ -24,42 +24,42 @@ sourceFile:
 //DECLARACAO DE CONSTANTES, TIPOS CONJUNTOS E VARIAVEIS SIMPLES
 //Pelo que ta escrito no lab5 nao precisa ser sobrescrito
 declaration: 
-	constDecl 
-	| typeDecl 
-	| varDecl; 
+//	constDecl
+//	typeDecl
+	varDecl;
 
-constDecl: 
-	CONST constSpec #constSpecUniq
-	| CONST L_PAREN (constSpec eos)* R_PAREN #constSpecLoop;
+//constDecl:
+//	CONST constSpec #constSpecUniq
+//	| CONST L_PAREN (constSpec eos)* R_PAREN #constSpecLoop;
 
-constSpec: identifierList (type_? ASSIGN expressionList)?;
+//constSpec: identifierList (type_? ASSIGN expressionList)?;
 
 identifierList: IDENTIFIER (COMMA IDENTIFIER)*;
 
 expressionList: expression (COMMA expression)*;
 
-typeDecl: 
-	TYPE typeSpec #typeDeclUnic
-	|TYPE L_PAREN (typeSpec eos)* R_PAREN #typeDeclLoop; 
-
-typeSpec: IDENTIFIER ASSIGN? type_;
+//typeDecl:
+//	TYPE typeSpec #typeDeclUnic
+//	|TYPE L_PAREN (typeSpec eos)* R_PAREN #typeDeclLoop;
+//
+//typeSpec: IDENTIFIER ASSIGN? type_;
 
 
 // DECLARACAO DE FUNCAO
 
 functionDecl: FUNC IDENTIFIER (signature block?);
 
-methodDecl: FUNC receiver IDENTIFIER ( signature block?);
-
-receiver: parameters;
+//methodDecl: FUNC receiver IDENTIFIER ( signature block?);
+//
+//receiver: parameters;
 
 //TIPO VAR (DEIXA OU TIRA?)
 varDecl: VAR (varSpec | L_PAREN (varSpec eos)* R_PAREN);
 
 varSpec:
-	identifierList (
-		type_ (ASSIGN expressionList)?
-		| ASSIGN expressionList
+	identifierList (  // var a, b, x int = 1, 2, 3
+		(basicLit | compositeLit) (ASSIGN expressionList)?
+//		| ASSIGN expressionList
 	);
 
 //BLOCO DE STATUS
@@ -76,10 +76,10 @@ statement:
 	| returnStmt
 	| breakStmt
 	| continueStmt
-	| fallthroughStmt
+//	| fallthroughStmt
 	| block
 	| ifStmt
-	| switchStmt
+//	| switchStmt
 	| forStmt;
 
 simpleStmt:
@@ -90,7 +90,8 @@ simpleStmt:
 //	| shortVarDecl
 	;
 
-ioStmt: (SCAN | PRINT) arguments;
+ioStmt: (SCAN arguments) #scanIO
+        | (PRINT arguments) #printIO;
 
 expressionStmt: expression;
 
@@ -121,7 +122,7 @@ breakStmt: BREAK IDENTIFIER?;
 
 continueStmt: CONTINUE IDENTIFIER?;
 
-fallthroughStmt: FALLTHROUGH;
+//fallthroughStmt: FALLTHROUGH;
 
 //CLAUSULA DO IF 
 ifStmt:
@@ -133,31 +134,31 @@ ifStmt:
 	)?;
 
 //CLAUSULA DO SWITCH E TYPESWITCH 
-switchStmt: exprSwitchStmt | typeSwitchStmt;
+//switchStmt: exprSwitchStmt | typeSwitchStmt;
 
-exprSwitchStmt:
-	SWITCH (expression?
-					| simpleStmt? eos expression?
-					) L_CURLY exprCaseClause* R_CURLY;
+//exprSwitchStmt:
+//	SWITCH (expression?
+//					| simpleStmt? eos expression?
+//					) L_CURLY exprCaseClause* R_CURLY;
 
-exprCaseClause: exprSwitchCase COLON statementList?;
+//exprCaseClause: exprSwitchCase COLON statementList?;
 
-exprSwitchCase: CASE expressionList | DEFAULT;
+//exprSwitchCase: CASE expressionList | DEFAULT;
 
-typeSwitchStmt:
-	SWITCH ( typeSwitchGuard
-					| eos typeSwitchGuard
-					| simpleStmt eos typeSwitchGuard)
-					 L_CURLY typeCaseClause* R_CURLY;
+//typeSwitchStmt:
+//	SWITCH ( typeSwitchGuard
+//					| eos typeSwitchGuard
+//					| simpleStmt eos typeSwitchGuard)
+//					 L_CURLY typeCaseClause* R_CURLY;
 
-typeSwitchGuard: primaryExpr DOT L_PAREN TYPE R_PAREN;
+//typeSwitchGuard: primaryExpr DOT L_PAREN TYPE R_PAREN;
 //typeSwitchGuard: (IDENTIFIER DECLARE_ASSIGN)? primaryExpr DOT L_PAREN TYPE R_PAREN;
 
-typeCaseClause: typeSwitchCase COLON statementList?;
+//typeCaseClause: typeSwitchCase COLON statementList?;
 
-typeSwitchCase: CASE typeList | DEFAULT;
+//typeSwitchCase: CASE typeList | DEFAULT;
 
-typeList: (type_) (COMMA (type_))*;
+//typeList: (type_) (COMMA (type_))*;
 //typeList: (type_ | NIL_LIT) (COMMA (type_ | NIL_LIT))*;
 
 // Removi o DECLARE_ASSIGN do lexer
@@ -166,41 +167,44 @@ recvStmt: (expressionList ASSIGN)? recvExpr = expression;
 
 //CLAUSULA DO FOR()
 
-forStmt: FOR (expression? | forClause | rangeClause?) block;
+//forStmt: FOR (expression? | forClause | rangeClause?) block;
+forStmt: FOR (expression? | forClause) block;
 
 forClause:
 	initStmt = simpleStmt? eos expression? eos postStmt = simpleStmt?;
 
 //CLAUSULA DO RANGE
 // Removi o DECLARE_ASSIGN do lexer
-rangeClause: (
-		expressionList ASSIGN
-//		| identifierList DECLARE_ASSIGN
-	)? RANGE expression;
+//rangeClause: (
+//		expressionList ASSIGN
+////		| identifierList DECLARE_ASSIGN
+//	)? RANGE expression;
 
-type_: typeName | typeLit | L_PAREN type_ R_PAREN;
+//type_: typeName | typeLit | L_PAREN type_ R_PAREN;
 
-typeName: qualifiedIdent | IDENTIFIER;
+//typeName: qualifiedIdent | IDENTIFIER;
 
-typeLit:
-	arrayType
-	| structType
-	| functionType
-	| sliceType
-	| mapType;
+
+//typeLit:
+//	arrayType
+//	| structType
+//	| functionType;
+//	| sliceType;
+//	| mapType;
 
 arrayType: L_BRACKET arrayLength R_BRACKET elementType;
 
 arrayLength: expression;
 
-elementType: type_;
+elementType: basicLit;
 
-sliceType: L_BRACKET R_BRACKET elementType;
+//sliceType: L_BRACKET R_BRACKET elementType;
 
-mapType: MAP L_BRACKET type_ R_BRACKET elementType;
+//mapType: MAP L_BRACKET type_ R_BRACKET elementType;
 
 methodSpec:
-	IDENTIFIER parameters result
+//	IDENTIFIER parameters result
+	IDENTIFIER parameters parameters
 	| IDENTIFIER parameters;
 
 functionType: FUNC signature;
@@ -209,15 +213,17 @@ functionType: FUNC signature;
 // fmt.Scan()
 
 signature:
-	parameters result
+//	parameters result
+	parameters parameters
 	| parameters;
 
-result: parameters | type_;
+//result: parameters | type_;
 
 parameters:
 	L_PAREN (parameterDecl (COMMA parameterDecl)* COMMA?)? R_PAREN;
 
-parameterDecl: identifierList? type_;
+//parameterDecl: identifierList? type_;
+parameterDecl: identifierList (basicLit | compositeLit);
 
 expression:
 	primaryExpr
@@ -247,20 +253,20 @@ expression:
 
 primaryExpr:
 	operand
-	| conversion
-	| methodExpr
+//	| conversion
+//	| methodExpr
 	| primaryExpr (
 		(DOT IDENTIFIER)
 		| index
-		| slice_
-		| typeAssertion
+//		| slice_
+//		| typeAssertion
 		| arguments
 	);
 
 
-conversion: nonNamedType L_PAREN expression COMMA? R_PAREN;
-
-nonNamedType: typeLit | L_PAREN nonNamedType R_PAREN;
+//conversion: nonNamedType L_PAREN expression COMMA? R_PAREN;
+//
+//nonNamedType: typeLit | L_PAREN nonNamedType R_PAREN;
 
 operand: literal | operandName | L_PAREN expression R_PAREN;
 
@@ -270,7 +276,11 @@ basicLit:
 //	NIL_LIT     #nullType
 	integer   #intType
 	| string_   #stringType
-	| float     #floatType;
+	| float     #floatType
+	| bool      #boolType;
+
+bool:
+    FALSE | TRUE;
 
 integer:
 	DECIMAL_LIT;
@@ -280,17 +290,18 @@ float:
 
 operandName: IDENTIFIER;
 
-qualifiedIdent: IDENTIFIER DOT IDENTIFIER;
+//qualifiedIdent: IDENTIFIER DOT IDENTIFIER;
 
-compositeLit: literalType literalValue;
+//compositeLit: literalType literalValue;
+compositeLit: arrayType literalValue;
 
 //TIPOS LITERAIS
-literalType:
-	structType
-	| arrayType
-	| sliceType
-	| mapType
-	| typeName;
+//literalType:
+//	structType
+//	arrayType
+//	| sliceType
+//	| mapType
+//	| typeName;
 
 literalValue: L_CURLY (elementList COMMA?)? R_CURLY;
 
@@ -303,43 +314,44 @@ key: expression | literalValue;
 element: expression | literalValue;
 
 //TIPO STRUCT
-structType: STRUCT L_CURLY (fieldDecl eos)* R_CURLY;
+//structType: STRUCT L_CURLY (fieldDecl eos)* R_CURLY;
 
 //fieldDecl: (
 //		{noTerminatorBetween(2)}? identifierList type_
 //		| embeddedField
 //	) tag = string_?;
-fieldDecl: (
-		identifierList type_
-		| embeddedField
-	) tag = string_?;
+//fieldDecl: (
+//		identifierList type_
+//		| embeddedField
+//	) tag = string_?;
 
 string_: RAW_STRING_LIT | INTERPRETED_STRING_LIT;
 
-embeddedField: STAR? typeName;
+//embeddedField: STAR? typeName;
 
 functionLit: FUNC (signature block?); // function
 
 index: L_BRACKET expression R_BRACKET;
 
-slice_:
-	L_BRACKET (
-		expression? COLON expression?
-		| expression? COLON expression COLON expression
-	) R_BRACKET;
+//slice_:
+//	L_BRACKET (
+//		expression? COLON expression?
+//		| expression? COLON expression COLON expression
+//	) R_BRACKET;
 
-typeAssertion: DOT L_PAREN type_ R_PAREN;
+//typeAssertion: DOT L_PAREN type_ R_PAREN;
 
 arguments:
 	L_PAREN (
-		(expressionList | nonNamedType (COMMA expressionList)?) COMMA?
+		(expressionList | (COMMA expressionList)?) COMMA?
+//		(expressionList | nonNamedType (COMMA expressionList)?) COMMA?
 	)? R_PAREN;
 
-methodExpr: nonNamedType DOT IDENTIFIER;
+//methodExpr: nonNamedType DOT IDENTIFIER;
 
 //receiverType: typeName | '(' ('*' typeName | receiverType) ')';
 
-receiverType: type_;
+//receiverType: type_;
 
 eos:
 	SEMI

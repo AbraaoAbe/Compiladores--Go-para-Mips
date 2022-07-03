@@ -3,21 +3,19 @@ lexer grammar GoLexer;
 // Keywords
 
 BREAK                  : 'break' -> mode(NLSEMI);
-DEFAULT                : 'default';
+//DEFAULT                : 'default';
 FUNC                   : 'func';
-SELECT                 : 'select';
-CASE                   : 'case';
-MAP                    : 'map';
-STRUCT                 : 'struct';
+//SELECT                 : 'select';
+//MAP                    : 'map';
+//STRUCT                 : 'struct';
 ELSE                   : 'else';
 PACKAGE                : 'package '([a-zA-Z])* -> skip;
 
-SWITCH                 : 'switch';
-CONST                  : 'const';
-FALLTHROUGH            : 'fallthrough' -> mode(NLSEMI);
+//CONST                  : 'const';
+//FALLTHROUGH            : 'fallthrough' -> mode(NLSEMI);
 IF                     : 'if';
-RANGE                  : 'range';
-TYPE                   : 'type';
+//RANGE                  : 'range';
+//TYPE                   : 'type';
 CONTINUE               : 'continue' -> mode(NLSEMI);
 FOR                    : 'for';
 IMPORT                 : 'import "fmt"' -> skip;
@@ -76,7 +74,12 @@ MINUS                  : '-';
 CARET                  : '^';
 STAR                   : '*';
 
+// Bool decl
+FALSE                  : 'false';
+TRUE                   : 'true';
+
 // Number literals
+
 
 DECIMAL_LIT            : ('0' | [1-9] ('_'? [0-9])*) -> mode(NLSEMI);
 

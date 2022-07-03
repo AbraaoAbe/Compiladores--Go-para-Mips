@@ -2,8 +2,6 @@ package samples
 
 import "fmt"
 
-var entries map[string]int
-
 func multiRet() (int, int) {
 	return 1, 2
 }
