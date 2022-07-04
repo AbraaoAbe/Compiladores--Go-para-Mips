@@ -9,7 +9,7 @@ options {
 sourceFile:
 	((functionDecl) eos)* EOF #funcDeclLoop
 //	| ((methodDecl) eos)* EOF #methDeclLoop
-	| ((declaration) eos)* EOF #DeclvarLoop;
+	| ((declaration) eos)* EOF #declvarLoop;
 
 
 //!MODIFICACAO CANCELADA
@@ -58,7 +58,7 @@ varDecl: VAR (varSpec | L_PAREN (varSpec eos)* R_PAREN);
 
 varSpec:
 	identifierList (  // var a, b, x int = 1, 2, 3
-		(basicLit | compositeLit) (ASSIGN expressionList)?
+		type_ (ASSIGN expressionList)?
 //		| ASSIGN expressionList
 	);
 
@@ -180,9 +180,9 @@ forClause:
 ////		| identifierList DECLARE_ASSIGN
 //	)? RANGE expression;
 
-//type_: typeName | typeLit | L_PAREN type_ R_PAREN;
+type_: typeName | L_PAREN type_ R_PAREN;
 
-//typeName: qualifiedIdent | IDENTIFIER;
+typeName: IDENTIFIER;
 
 
 //typeLit:
