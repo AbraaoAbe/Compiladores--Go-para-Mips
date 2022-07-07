@@ -6,7 +6,7 @@ JAVAC=javac
 ROOT=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 # Certifique-se de que o antlr esteja instalado em /usr/local/lib
 
-ANTLR_PATH=/usr/local/lib/antlr-4.10.1-complete.jar
+ANTLR_PATH=/home-temp/aluno/Documents/trab_comp/Compiladores--Go-para-Mips/antlr-4.10.1-complete.jar
 CLASS_PATH_OPTION=-cp .:$(ANTLR_PATH)
 
 # Comandos como descritos na página do ANTLR.
@@ -19,7 +19,7 @@ GEN_PATH=src-parser
 # Diretório para os casos de teste
 DATA=$(ROOT)/tests
 IN=$(DATA)
-FILE=$(IN)/foreachStmts.go
+FILE=$(IN)/simple.go
 
 all: antlr javac
 	@echo "Done."

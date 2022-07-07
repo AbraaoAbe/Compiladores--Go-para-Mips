@@ -25,7 +25,14 @@ VAR                    : 'var';
 // Remover o NULL
 //NIL_LIT                : 'nil' -> mode(NLSEMI);
 
+INT                    :    'int'| 'int32' | 'int64';
+FLOAT                  :    'float' | 'float32' | 'float64';     
+STRING                 :    'string';
+BOOL                   :    'bool';
+
 IDENTIFIER             : LETTER (LETTER | DECIMALS)* -> mode(NLSEMI);
+
+
 
 // Punctuation
 

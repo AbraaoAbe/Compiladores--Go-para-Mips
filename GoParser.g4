@@ -9,7 +9,7 @@ options {
 sourceFile:
 	((functionDecl) eos)* EOF #funcDeclLoop
 //	| ((methodDecl) eos)* EOF #methDeclLoop
-	| ((declaration) eos)* EOF #DeclvarLoop;
+	| ((declaration) eos)* EOF #declvarLoop;
 
 
 //!MODIFICACAO CANCELADA
@@ -54,18 +54,18 @@ functionDecl: FUNC IDENTIFIER (signature block?);
 //receiver: parameters;
 
 //TIPO VAR (DEIXA OU TIRA?)
-varDecl: VAR (varSpec | L_PAREN (varSpec eos)* R_PAREN);
+//varDecl: VAR (varSpec | L_PAREN (varSpec eos)* R_PAREN);
+
+varDecl: VAR varSpec ;
 
 varSpec:
-	identifierList (  // var a, b, x int = 1, 2, 3
-		(basicLit | compositeLit) (ASSIGN expressionList)?
-//		| ASSIGN expressionList
-	);
+	identifierList type_ (ASSIGN expressionList)?;
+ 	// var a, b, x int = 1, 2, 3
 
 //BLOCO DE STATUS
 block: L_CURLY statementList? R_CURLY;
 
-statementList: (statement eos)+;
+statementList: (statement eos?)+;
 //statementList: ((SEMI? | {closingBracket()}?) statement)+;
 
 //STATUS
@@ -180,9 +180,12 @@ forClause:
 ////		| identifierList DECLARE_ASSIGN
 //	)? RANGE expression;
 
-//type_: typeName | typeLit | L_PAREN type_ R_PAREN;
+type_: typeName | arrayType | L_PAREN type_ R_PAREN;
 
-//typeName: qualifiedIdent | IDENTIFIER;
+typeName: INT
+		| FLOAT
+		| STRING
+		| BOOL;
 
 
 //typeLit:
@@ -196,7 +199,7 @@ arrayType: L_BRACKET arrayLength R_BRACKET elementType;
 
 arrayLength: expression;
 
-elementType: basicLit;
+elementType: type_;
 
 //sliceType: L_BRACKET R_BRACKET elementType;
 

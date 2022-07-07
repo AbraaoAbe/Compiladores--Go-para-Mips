@@ -85,6 +85,7 @@ public class SemanticChecker extends GoParserBaseVisitor<AST> {
 
 	private StrTable st = new StrTable();   // Tabela de strings.
     private VarTable vt = new VarTable();   // Tabela de variáveis.
+	private FuncTable ft = new FuncTable();
 
     Type lastDeclType;  // Variável "global" com o último tipo declarado.
 
@@ -176,12 +177,6 @@ public class SemanticChecker extends GoParserBaseVisitor<AST> {
     		this.root.addChild(child);
     	}
 
-		//visita o sourceFile: ((methodDecl) eos)* EOF #methDeclLoop
-    	for (int i = 0; i < ctx.methDeclLoop().size(); i++) {
-    		AST child = visit(ctx.methDeclLoop(i));
-    		this.root.addChild(child);
-    	}
-
 		//visita o sourceFile: ((declaration) eos)* EOF #DeclvarLoop
     	for (int i = 0; i < ctx.DeclvarLoop().size(); i++) {
     		AST child = visit(ctx.DeclvarLoop(i));
@@ -191,14 +186,6 @@ public class SemanticChecker extends GoParserBaseVisitor<AST> {
     	// Como esta é a regra inicial, chegamos na raiz da AST.
 		return this.root;
 	}
-
-	// Visita a regra constDecl: CONST constSpec #constSpecUniq
-    @Override
-    public AST visitConstSpecUniq(GoParser.ConstSpecUniqContext ctx) {
-    	// Visita a definição do tipo da variável.
-		AST constNode = AST.newSubtree(BLOCK_NODE, NO_TYPE);
-    	visit(ctx.ConstSpecUniq());
-    }
 
     // Visita a regra vars_sect: VAR var_decl*
     @Override
@@ -238,22 +225,19 @@ public class SemanticChecker extends GoParserBaseVisitor<AST> {
 		return null;
 	}
 
-	// Visita a regra type_spec: REAL
 	@Override
-	public AST visitRealType(GoParser.RealTypeContext ctx) {
-		this.lastDeclType = Type.FLOAT_TYPE;
-		// Não tem problema retornar null aqui porque o método chamador
-    	// ignora o valor de retorno.
-		return null;
-    }
-
-	// Visita a regra type_spec: STRING
-	@Override
-	public AST visitStrType(GoParser.StrTypeContext ctx) {
+	public AST visitStringType(GoParser.StringTypeContext ctx){
 		this.lastDeclType = Type.STRING_TYPE;
-		// Não tem problema retornar null aqui porque o método chamador
-    	// ignora o valor de retorno.
-		return null;
+
+		this.st.add(ctx.string_().getStop().getText());
+
+    	return null; // Java says must return something even when Void	
+	}
+
+	@Override
+	public AST visitArrayType(GoParser.ArrayTypeContext ctx){
+		this.lastDeclType = Type.ARRAY_TYPE;
+    	return null; // Java says must return something even when Void
 	}
 
     // Visita a regra typeDecl: type_spec ID SEMI

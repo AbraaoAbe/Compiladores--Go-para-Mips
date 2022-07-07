@@ -2,7 +2,11 @@ package main
 
 import "fmt"
 
-func VarDecls() {
-    var a = false
-// 	var a int = 2       // +
+func main() {
+	var a int
+	var b int
+	var c int
+	var d int = 30
+	a = 10
+
 }
