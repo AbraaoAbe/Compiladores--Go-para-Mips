@@ -180,7 +180,7 @@ forClause:
 ////		| identifierList DECLARE_ASSIGN
 //	)? RANGE expression;
 
-type_: typeName | arrayType | L_PAREN type_ R_PAREN;
+type_: typeName | arrayType;
 
 typeName: INT
 		| FLOAT
@@ -217,9 +217,8 @@ functionType: FUNC signature;
 
 signature:
 //	parameters result
-	parameters parameters
-	| parameters;
-
+	parameters type_?;
+    // os parâmetros da função mais o tipo do retorno, caso não tenho tipo do retorn a função não retorna nada
 //result: parameters | type_;
 
 parameters:
