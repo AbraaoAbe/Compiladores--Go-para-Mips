@@ -59,7 +59,7 @@ functionDecl: FUNC IDENTIFIER (signature block?);
 varDecl: VAR varSpec;
 
 varSpec:
-	identifierList type_ (ASSIGN expressionList)?;
+	identifierList type_;
  	// var a, b, x int = 1, 2, 3
 
 //BLOCO DE STATUS
