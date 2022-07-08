@@ -1,4 +1,4 @@
-// Generated from /home-temp/aluno/Documents/trab_comp/Compiladores--Go-para-Mips/GoLexer.g4 by ANTLR 4.9.2
+// Generated from c:\Users\Abraão Santos\Dropbox\My PC (AbraaumSantos)\Documents\GitHub\Trab_Comp_Certo\Compiladores--Go-para-Mips\GoLexer.g4 by ANTLR 4.9.2
 import org.antlr.v4.runtime.Lexer;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.Token;

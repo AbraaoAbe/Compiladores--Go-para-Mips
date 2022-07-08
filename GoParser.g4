@@ -59,7 +59,7 @@ functionDecl: FUNC IDENTIFIER (signature block?);
 varDecl: VAR varSpec;
 
 varSpec:
-	identifierList type_ (ASSIGN expressionList)?;
+	identifierList type_ ;
  	// var a, b, x int = 1, 2, 3
 
 //BLOCO DE STATUS
@@ -180,7 +180,7 @@ forClause:
 ////		| identifierList DECLARE_ASSIGN
 //	)? RANGE expression;
 
-type_: typeName | arrayType | L_PAREN type_ R_PAREN;
+type_: typeName | arrayType ;
 
 typeName: INT #intType
 		| FLOAT #floatType
