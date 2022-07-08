@@ -6,7 +6,8 @@ JAVAC=javac
 ROOT=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 # Certifique-se de que o antlr esteja instalado em /usr/local/lib
 
-ANTLR_PATH=/usr/local/lib/antlr-4.10.1-complete.jar
+#ANTLR_PATH=/usr/local/lib/antlr-4.10.1-complete.jar
+ANTLR_PATH=${ROOT}/antlr-4.10.1-complete.jar
 CLASS_PATH_OPTION=-cp .:$(ANTLR_PATH)
 
 # Comandos como descritos na página do ANTLR.
@@ -17,8 +18,8 @@ GRUN=$(JAVA) $(CLASS_PATH_OPTION) org.antlr.v4.gui.TestRig
 GEN_PATH=src-parser
 
 # Diretório para os casos de teste
-#DATA=$(ROOT)/tests
-DATA=/home/igor/Desktop/ztests
+DATA=$(ROOT)/tests
+#DATA=/home/igor/Desktop/ztests
 IN=$(DATA)
 FILE=$(IN)/statementlessLabel.go
 
