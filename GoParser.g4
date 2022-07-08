@@ -59,7 +59,7 @@ functionDecl: FUNC IDENTIFIER (signature block?);
 varDecl: VAR varSpec;
 
 varSpec:
-	identifierList type_ ;
+	identifierList type_ (ASSIGN expressionList)?;
  	// var a, b, x int = 1, 2, 3
 
 //BLOCO DE STATUS
@@ -180,7 +180,7 @@ forClause:
 ////		| identifierList DECLARE_ASSIGN
 //	)? RANGE expression;
 
-type_: typeName | arrayType ;
+type_: typeName | arrayType;
 
 typeName: INT #intType
 		| FLOAT #floatType
@@ -218,9 +218,8 @@ functionType: FUNC signature;
 
 signature:
 //	parameters result
-	parameters parameters
-	| parameters;
-
+	parameters type_?;
+    // os parâmetros da função mais o tipo do retorno, caso não tenho tipo do retorn a função não retorna nada
 //result: parameters | type_;
 
 parameters:

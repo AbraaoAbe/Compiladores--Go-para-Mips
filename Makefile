@@ -6,7 +6,8 @@ JAVAC=javac
 ROOT=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 # Certifique-se de que o antlr esteja instalado em /usr/local/lib
 
-ANTLR_PATH=/home-temp/aluno/Documents/trab_comp/Compiladores--Go-para-Mips/antlr-4.10.1-complete.jar
+#ANTLR_PATH=/usr/local/lib/antlr-4.10.1-complete.jar
+ANTLR_PATH=${ROOT}/antlr-4.10.1-complete.jar
 CLASS_PATH_OPTION=-cp .:$(ANTLR_PATH)
 
 # Comandos como descritos na página do ANTLR.
@@ -18,8 +19,9 @@ GEN_PATH=src-parser
 
 # Diretório para os casos de teste
 DATA=$(ROOT)/tests
+#DATA=/home/igor/Desktop/ztests
 IN=$(DATA)
-FILE=$(IN)/simple.go
+FILE=$(IN)/statementlessLabel.go
 
 all: antlr javac
 	@echo "Done."
@@ -36,7 +38,8 @@ javac:
 # 'Go' é o prefixo comum das duas gramáticas (GoLexer e GoParser).
 # 'sourceFile' é a regra inicial de GoParser.
 run:
-	cd $(GEN_PATH) && $(GRUN) Go sourceFile $(FILE)
+	cd $(GEN_PATH) && $(GRUN) Go sourceFile $(FILE) && \
+	echo "\e[33mRunning ${FILE} \e[0m" && \
 	cd ..
 
 # Executa o grun com a opção de mostrar os tokens
@@ -52,10 +55,10 @@ run-gui:
 # Executa todos os testes
 runall:
 	-for FILENAME in $(IN)/*.go; do \
-	 	cd $(GEN_PATH) && \
-	 	echo -e "\nRunning $${FILENAME}" && \
-	 	$(GRUN) Go sourceFile $${FILENAME} && \
-	 	cd .. ; \
+		cd $(GEN_PATH) && \
+		echo "\e[34m \nRunning $${FILENAME} \e[0m" && \
+		$(GRUN) Go sourceFile $${FILENAME} && \
+		cd .. ; \
 	done;
 
 clean:
