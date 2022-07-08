@@ -118,8 +118,8 @@ public class SemanticChecker extends GoParserBaseVisitor<AST> {
         	System.exit(1);
             return null; // Never reached.
         }
-        idx = vt.addVar(text, line, lastDeclType);
-        return new AST(VAR_DECL_NODE, idx, lastDeclType);
+        idx = vt.addVar(text, line, NO_TYPE);
+        return new AST(VAR_DECL_NODE, idx, NO_TYPE);
     }
 
     // ----------------------------------------------------------------------------
@@ -165,7 +165,7 @@ public class SemanticChecker extends GoParserBaseVisitor<AST> {
 	public AST visitSourceFile(SourceFileContext ctx) {
     	this.root = AST.newSubtree(PROGRAM_NODE, NO_TYPE);
     	// No caso de não-terminais com fechos (* ou +), a chamada do método
-    	// correspondente retorna uma lista com todos os elementos da Parse
+    	// correspondente retornatype_ uma lista com todos os elementos da Parse
     	// Tree que entraram no fecho. Assim, podemos percorrer (visitar) a
     	// lista para construir as subárvores dos filhos.
     	// Também é possível usar o iterador da lista aqui mas prefiro esse
@@ -187,9 +187,23 @@ public class SemanticChecker extends GoParserBaseVisitor<AST> {
 		return this.root;
 	}
 
-    // Visita a regra vars_sect: VAR var_decl*
+    // Visita a regra vars_sect: VAR var_decl*ctx.IDENTIFIER(i)PE);
+    // 	// No caso de não-terminais com fechos (* ou +), a chamada do método
+    // 	// correspondente retorna uma lista com todos os elementos da Parse
+    // 	// Tree que entraram no fecho. Assim, podemos percorrer (visitar) a
+    // 	// lista para construir as subárvores dos filhos.
+    // 	// Também é possível usar o iterador da lista aqui mas prefiro esse
+    // 	// estilo de loop clássico...
+    // 	for (int i = 0; i < ctx.var_decl().size(); i++) {
+    // 		AST child = visit(ctx.var_decl(i));
+    // 		node.addChild(child);
+    // 	}
+    // 	return node;
+	// }
+
+	// Visita a regra varDecl: VAR varSpec ;
     @Override
-	public AST visitVars_sect(Vars_sectContext ctx) {
+	public AST visitVarDecl(VarDeclContext ctx) {
     	// Para facilitar, sempre crio um nó com a lista das variáveis.
     	// Assim, não precisa ficar testando depois se ele existe ou não.
     	// Se não houverem variáveis declaradas, o nó fica sem filhos.
@@ -200,14 +214,73 @@ public class SemanticChecker extends GoParserBaseVisitor<AST> {
     	// lista para construir as subárvores dos filhos.
     	// Também é possível usar o iterador da lista aqui mas prefiro esse
     	// estilo de loop clássico...
-    	for (int i = 0; i < ctx.var_decl().size(); i++) {
-    		AST child = visit(ctx.var_decl(i));
-    		node.addChild(child);
-    	}
+		visit(ctx.varSpec());
+    	// for (int i = 0; i < ctx.var_decl().size(); i++) {
+    	// 	AST child = visit(ctx.var_decl(i));
+    	// 	node.addChild(child);
+    	// }
     	return node;
 	}
 
-	// Visita a regra type_spec: BOOL
+	// varSpec:
+	// identifierList type_ (ASSIGN expressionList)?;
+	// O acesso a expressionList sera feito no corpo do programa
+	@Override
+	public AST visitVarSpec(VarSpecContext ctx) {
+    
+   
+    	
+		AST idList = visit(ctx.identifierList());
+
+		visit(ctx.type_());
+
+		for (int i = 0; i < idList.getSizeChild(); i++) {
+			AST child = idList.children.get(i);
+			child.type = lastDeclType;
+			vt.setType(child.intData, lastDeclType);
+    	}
+    	
+    	return idList;
+	}
+
+	//identifierList: IDENTIFIER (COMMA IDENTIFIER)*;
+	@Override
+	public AST visitIdentifierList(IdentifierListContext ctx) {
+    
+		AST varList = AST.newSubtree(VAR_LIST_NODE, NO_TYPE);
+    	
+		for (int i = 0; i < ctx.IDENTIFIER().size(); i++) {
+    		AST node = newVar(ctx.IDENTIFIER(i));
+			varList.addChild(node);
+    	}
+    	
+    	return varList;
+	}
+
+	// //type_: typeName | arrayType | L_PAREN type_ R_PAREN;
+	// @Override
+	// public AST visitType_(Type_Context ctx) {
+    
+    	
+	// 	if (ctx.typeName().int_type() != null){
+	// 		lastDeclType = ctx.typeName().int_type().getText();
+	// 	}
+	// 	else if (ctx.typeName().float_type() != null){
+	// 		lastDeclType = ctx.typeName().float_type().getText();
+	// 	}
+	// 	else if (ctx.typeName().string_type() != null){
+	// 		lastDeclType = ctx.typeName().string_type().getText();
+	// 	}
+	// 	else if (ctx.typeName().bool_type() != null){
+	// 		lastDeclType = ctx.typeName().bool_type().getText();
+	// 	}
+	// 	else{
+	// 		System.out.printf("SEMANTIC ERROR (x): incompatible types for operator 'x', LHS is 'x' and RHS is 'x'.\n");
+	// 	}
+    // 	return null;
+	// }
+
+	// Visita a regra typeName: BOOL
     @Override
     public AST visitBoolType(GoParser.BoolTypeContext ctx) {
     	this.lastDeclType = Type.BOOL_TYPE;
@@ -216,7 +289,7 @@ public class SemanticChecker extends GoParserBaseVisitor<AST> {
     	return null;
     }
 
-	// Visita a regra type_spec: INT
+	// Visita a regra typeName: INT
 	@Override
 	public AST visitIntType(GoParser.IntTypeContext ctx) {
 		this.lastDeclType = Type.INT_TYPE;
@@ -234,6 +307,16 @@ public class SemanticChecker extends GoParserBaseVisitor<AST> {
     	return null; // Java says must return something even when Void	
 	}
 
+	// Visita a regra typeName: FLOAT
+	@Override
+	public AST visitFloatType(GoParser.FloatTypeContext ctx) {
+		this.lastDeclType = Type.FLOAT_TYPE;
+		// Não tem problema retornar null aqui porque o método chamador
+    	// ignora o valor de retorno.
+		return null;
+	}
+
+	//!MUDAR ARRAY TYPE
 	@Override
 	public AST visitArrayType(GoParser.ArrayTypeContext ctx){
 		this.lastDeclType = Type.ARRAY_TYPE;
@@ -241,13 +324,13 @@ public class SemanticChecker extends GoParserBaseVisitor<AST> {
 	}
 
     // Visita a regra typeDecl: type_spec ID SEMI
-    @Override
-    public AST visitTypeDecl(GoParser.TypeDeclContext ctx) {
-    	// Visita a definição do tipo da variável.
-    	visit(ctx.type_spec());
-    	// Cria e retorna um nó para a variável.
-    	return newVar(ctx.ID().getSymbol());
-    }
+    // @Override
+    // public AST visitTypeDecl(GoParser.TypeDeclContext ctx) {
+    // 	// Visita a definição do tipo da variável.
+    // 	visit(ctx.type_spec());
+    // 	// Cria e retorna um nó para a variável.
+    // 	return newVar(ctx.ID().getSymbol());
+    // }
 
     // Visita a regra stmt_sect: BEGIN stmt+ END
     @Override
