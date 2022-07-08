@@ -9,7 +9,7 @@ options {
 sourceFile:
 	((functionDecl) eos)* EOF #funcDeclLoop
 //	| ((methodDecl) eos)* EOF #methDeclLoop
-	| ((declaration) eos)* EOF #declvarLoop;
+	| ((varDecl) eos)* EOF #declvarLoop;
 
 
 //!MODIFICACAO CANCELADA
@@ -23,10 +23,10 @@ sourceFile:
 
 //DECLARACAO DE CONSTANTES, TIPOS CONJUNTOS E VARIAVEIS SIMPLES
 //Pelo que ta escrito no lab5 nao precisa ser sobrescrito
-declaration: 
+//declaration: 
 //	constDecl
 //	typeDecl
-	varDecl;
+//	varDecl;
 
 //constDecl:
 //	CONST constSpec #constSpecUniq
@@ -56,7 +56,7 @@ functionDecl: FUNC IDENTIFIER (signature block?);
 //TIPO VAR (DEIXA OU TIRA?)
 //varDecl: VAR (varSpec | L_PAREN (varSpec eos)* R_PAREN);
 
-varDecl: VAR varSpec ;
+varDecl: VAR varSpec;
 
 varSpec:
 	identifierList type_ (ASSIGN expressionList)?;
@@ -70,7 +70,7 @@ statementList: (statement eos?)+;
 
 //STATUS
 statement:
-	declaration
+	varDecl
 	| labeledStmt
 	| simpleStmt
 	| returnStmt
@@ -182,10 +182,11 @@ forClause:
 
 type_: typeName | arrayType | L_PAREN type_ R_PAREN;
 
-typeName: INT
-		| FLOAT
-		| STRING
-		| BOOL;
+typeName: INT #intType
+		| FLOAT #floatType
+		| STRING #stringType
+		| BOOL #boolType
+		; 
 
 
 //typeLit:
@@ -277,10 +278,10 @@ literal: basicLit | compositeLit | functionLit;
 
 basicLit:
 //	NIL_LIT     #nullType
-	integer   #intType
-	| string_   #stringType
-	| float     #floatType
-	| bool      #boolType;
+	integer   
+	| string_   
+	| float     
+	| bool ;
 
 bool:
     FALSE | TRUE;

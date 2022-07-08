@@ -18,8 +18,8 @@ public class AST {
 	public  final NodeKind kind;
 	public  final int intData;
 	public  final float floatData;
-	public  final Type type;
-	private final List<AST> children; // Privado para que a manipulação da lista seja controlável.
+	public  Type type;
+	public  final List<AST> children; // Privado para que a manipulação da lista seja controlável.
 
 	// Construtor completo para poder tornar todos os campos finais.
 	// Privado porque não queremos os dois campos 'data' preenchidos ao mesmo tempo.
@@ -53,6 +53,11 @@ public class AST {
 		// Claro que um código em produção precisa testar o índice antes para
 		// evitar uma exceção.
 	    return this.children.get(idx);
+	}
+
+	//Retorna o tamanho do filho
+	public int getSizeChild(){
+		return this.children.size();
 	}
 
 	// Cria um nó e pendura todos os filhos passados como argumento.
