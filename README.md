@@ -5,8 +5,18 @@
  Options: superclass comentada "gerava erro de classe"
 
 #### Types
-+ Bool
-+ Numeric:
- - int;
- - float
++ Bool 
++ int; 
++ float
 + String
++ Array
+
+#### Tests passed
++ HelloWorld.go
++ arrayDecls.go
++ first.go
++ forStmts.go
++ foreachStmts.go
++ function.go
++ hardcodedPassword.go
++ statementlessLabel.go

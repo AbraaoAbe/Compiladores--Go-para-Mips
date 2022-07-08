@@ -2,12 +2,8 @@ package samples
 
 import "fmt"
 
-func S() (int, int) {
-	return 1, 2
-}
-
 func ForStmts() {
-	a, b := 1, 2
+	var a, b int = 1, 2
 	for a < b {
 		fmt.Println("From condition-only ForStmt")
 		break
@@ -29,14 +25,14 @@ func ForStmts() {
 		fmt.Println("From condition-only ForClause ForClause ForStmt")
 		break
 	}
-
-	for j:=0 ; a < b; {
+    var j int
+	for j = 0; a < b; {
 		j++
 		fmt.Println("From init and condition ForClause ForClause ForStmt")
 		break
 	}
 
-	for j:=0 ; ; j++ {
+	for j = 0 ; ; j++ {
 		fmt.Println("From init and post ForClause ForClause ForStmt")
 		break
 	}
@@ -46,7 +42,8 @@ func ForStmts() {
 		break
 	}
 
-	for z:=0 ; a < b ; z++ {
+    var z int
+	for z = 0 ; a < b ; z++ {
 		fmt.Println("From full ForClause ForClause ForStmt")
 		return
 	}

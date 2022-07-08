@@ -1,14 +1,15 @@
 package main
 
-import "fmt"
-
 func ForeachStmts() {
 	// Here we use `range` to sum the numbers in a slice.
 	// Arrays work like this too.
-	nums := []int{2, 3, 4}
-	sum := 0
-	for _, num := range nums {
-		sum += num
+	var nums [3]int
+	nums[0] = 2
+	nums[1] = 3
+	nums[2] = 4
+	var sum, i int = 0, 0
+	for i; i < 3; i++ {
+		sum += nums[i]
 	}
 	fmt.Println("sum:", sum)
 
@@ -17,21 +18,10 @@ func ForeachStmts() {
 	// need the index, so we ignored it with the
 	// blank identifier `_`. Sometimes we actually want
 	// the indexes though.
-	for i, num := range nums {
-		if num == 3 {
+	for i = 0; i < 3; i++ {
+		if nums[i] == 3 {
 			fmt.Println("index:", i)
 		}
 	}
 
-	// `range` on map iterates over key/value pairs.
-	kvs := map[string]string{"a": "apple", "b": "banana"}
-
-	for k, v := range kvs {
-		fmt.Println(k, v)
-	}
-
-	// Valid statement
-	for range kvs {
-		fmt.Println()
-	}
 }
