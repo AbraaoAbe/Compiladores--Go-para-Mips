@@ -97,7 +97,10 @@ expressionStmt: expression;
 
 incDecStmt: expression (PLUS_PLUS | MINUS_MINUS);
 
-assignment: expressionList assign_op expressionList;
+//assignment: expressionList assign_op expressionList;
+//alterado o assignment pois do jeito que tava, aceitava maluquice: 1 = 2
+//index? indica o acesso ao array
+assignment: operandName index? assign_op expression;
 
 assign_op: (
 		PLUS
@@ -228,42 +231,30 @@ parameters:
 //parameterDecl: identifierList? type_;
 parameterDecl: identifierList (basicLit | compositeLit);
 
+
+//REMOVIDO: unary_op (nao faz sentido pra mim )
+//REMOVIDO: primaryExpr (muito amplo para 4 tipos primitivos e 1 tipo array)
+
+	//!SIMPLIFICADO O add_op
+	//| expression add_op = ( PLUS | MINUS | OR | CARET ) expression
+	//primaryExpr
+	//| unary_op = ( PLUS | MINUS | EXCLAMATION | CARET | STAR ) expression
 expression:
-	primaryExpr
-	| unary_op = (
-		PLUS
-		| MINUS
-		| EXCLAMATION
-		| CARET
-		| STAR
-	) expression
-	| expression mul_op = (
-		STAR
-		| DIV
-		| MOD
-	) expression
-	| expression add_op = (PLUS | MINUS | OR | CARET) expression
-	| expression rel_op = (
-		EQUALS
-		| NOT_EQUALS
-		| LESS
-		| LESS_OR_EQUALS
-		| GREATER
-		| GREATER_OR_EQUALS
-	) expression
-	| expression LOGICAL_AND expression
-	| expression LOGICAL_OR expression;
+	primaryExpr #primaryExp
+	| expression mul_op = ( STAR| DIV | MOD ) expression # timesOver
+	| expression add_op = ( PLUS | MINUS ) expression # plusMinus
+	| expression rel_op = ( EQUALS | NOT_EQUALS | LESS | LESS_OR_EQUALS | GREATER | GREATER_OR_EQUALS ) expression # eqLt
+	| expression LOGICAL_AND expression # relAnd
+	| expression LOGICAL_OR expression #relOr; 
 
 primaryExpr:
 	operand
+	| primaryExpr ( index | arguments
 //	| conversion
 //	| methodExpr
-	| primaryExpr (
-		(DOT IDENTIFIER)
-		| index
+//	| primaryExpr ((DOT IDENTIFIER) | index | arguments
 //		| slice_
 //		| typeAssertion
-		| arguments
 	);
 
 
@@ -277,10 +268,10 @@ literal: basicLit | compositeLit | functionLit;
 
 basicLit:
 //	NIL_LIT     #nullType
-	integer   
-	| string_   
-	| float     
-	| bool ;
+	integer   	#integerLit
+	| string_   #stringLit
+	| float     #floatLit
+	| bool 		#boolLit;
 
 bool:
     FALSE | TRUE;

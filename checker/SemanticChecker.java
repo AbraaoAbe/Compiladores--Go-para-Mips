@@ -257,29 +257,6 @@ public class SemanticChecker extends GoParserBaseVisitor<AST> {
     	return varList;
 	}
 
-	// //type_: typeName | arrayType | L_PAREN type_ R_PAREN;
-	// @Override
-	// public AST visitType_(Type_Context ctx) {
-    
-    	
-	// 	if (ctx.typeName().int_type() != null){
-	// 		lastDeclType = ctx.typeName().int_type().getText();
-	// 	}
-	// 	else if (ctx.typeName().float_type() != null){
-	// 		lastDeclType = ctx.typeName().float_type().getText();
-	// 	}
-	// 	else if (ctx.typeName().string_type() != null){
-	// 		lastDeclType = ctx.typeName().string_type().getText();
-	// 	}
-	// 	else if (ctx.typeName().bool_type() != null){
-	// 		lastDeclType = ctx.typeName().bool_type().getText();
-	// 	}
-	// 	else{
-	// 		System.out.printf("SEMANTIC ERROR (x): incompatible types for operator 'x', LHS is 'x' and RHS is 'x'.\n");
-	// 	}
-    // 	return null;
-	// }
-
 	// Visita a regra typeName: BOOL
     @Override
     public AST visitBoolType(GoParser.BoolTypeContext ctx) {
