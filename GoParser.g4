@@ -1,5 +1,10 @@
 parser grammar GoParser;
 
+@header{
+    package parser;
+}
+
+
 options {
 	tokenVocab = GoLexer;
 	superClass = GoParserBase;
@@ -99,7 +104,7 @@ incDecStmt: expression (PLUS_PLUS | MINUS_MINUS);
 
 //assignment: expressionList assign_op expressionList;
 //alterado o assignment pois do jeito que tava, aceitava maluquice: 1 = 2
-//index? indica o acesso ao array
+//index? indica o acesso ao arrayASSIGN
 assignment: operandName index? assign_op expression;
 
 assign_op: (

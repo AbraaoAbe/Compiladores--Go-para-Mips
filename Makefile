@@ -6,8 +6,8 @@ JAVAC=javac
 ROOT=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 # Certifique-se de que o antlr esteja instalado em /usr/local/lib
 
-#ANTLR_PATH=/usr/local/lib/antlr-4.10.1-complete.jar
-ANTLR_PATH=${ROOT}/antlr-4.10.1-complete.jar
+ANTLR_PATH=/usr/local/lib/antlr-4.10.1-complete.jar
+#ANTLR_PATH=${ROOT}/antlr-4.10.1-complete.jar
 CLASS_PATH_OPTION=-cp .:$(ANTLR_PATH)
 
 # Comandos como descritos na página do ANTLR.
@@ -15,13 +15,16 @@ ANTLR4=$(JAVA) -jar $(ANTLR_PATH)
 GRUN=$(JAVA) $(CLASS_PATH_OPTION) org.antlr.v4.gui.TestRig
 
 # Diretório para aonde vão os arquivos gerados.
-GEN_PATH=src-parser
+GEN_PATH=parser
+MAIN_PATH=checker
+BIN_PATH=bin
 
 # Diretório para os casos de teste
-DATA=$(ROOT)/tests
-#DATA=/home/igor/Desktop/ztests
+#DATA=$(ROOT)/tests
+DATA=/home/igor/Desktop/ztests
 IN=$(DATA)
-FILE=$(IN)/statementlessLabel.go
+FILE=$(IN)/simple.go
+OUT=./ast.txt
 
 all: antlr javac
 	@echo "Done."
@@ -29,11 +32,14 @@ all: antlr javac
 # Opção -no-listener foi usada para que o ANTLR não gere alguns arquivos
 # desnecessários para o momento. Isto será explicado melhor nos próximos labs.
 antlr: GoLexer.g4 GoParser.g4
-	$(ANTLR4) -no-listener -o $(GEN_PATH) GoLexer.g4 GoParser.g4
+	$(ANTLR4) -no-listener -visitor -o $(GEN_PATH) GoLexer.g4 GoParser.g4
+	cp GoParserBase.java $(GEN_PATH)
 
 javac:
-	$(JAVAC) $(CLASS_PATH_OPTION) ParserBase/GoParserBase.java $(GEN_PATH)/*.java
-	cp ParserBase/GoParserBase.class $(GEN_PATH)
+	rm -rf $(BIN_PATH)
+	mkdir $(BIN_PATH)
+	$(JAVAC) $(CLASS_PATH_OPTION) -d $(BIN_PATH) */*.java
+	#cp ParserBase/GoParserBase.class $(GEN_PATH)
 
 # 'Go' é o prefixo comum das duas gramáticas (GoLexer e GoParser).
 # 'sourceFile' é a regra inicial de GoParser.
@@ -61,5 +67,8 @@ runall:
 		cd .. ; \
 	done;
 
+run-ast:
+	$(JAVA) $(CLASS_PATH_OPTION):$(BIN_PATH) $(MAIN_PATH)/Main $(FILE)
+
 clean:
-	@rm -rf $(GEN_PATH)
+	@rm -rf $(GEN_PATH) $(BIN_PATH) $(OUT)
