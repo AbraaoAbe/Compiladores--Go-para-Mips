@@ -83,7 +83,7 @@ EXCLAMATION            : '!';
 PLUS                   : '+';
 MINUS                  : '-';
 CARET                  : '^';
-STAR                   : '*';
+TIMES                   : '*';
 
 // Bool decl
 FALSE                  : 'false';

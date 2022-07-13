@@ -112,7 +112,7 @@ assign_op: (
 		| MINUS
 		| OR
 		| CARET
-		| STAR
+		| TIMES
 		| DIV
 		| MOD
 	)? ASSIGN;
@@ -243,10 +243,11 @@ parameterDecl: identifierList (basicLit | compositeLit);
 	//!SIMPLIFICADO O add_op
 	//| expression add_op = ( PLUS | MINUS | OR | CARET ) expression
 	//primaryExpr
-	//| unary_op = ( PLUS | MINUS | EXCLAMATION | CARET | STAR ) expression
+	//| unary_op = ( PLUS | MINUS | EXCLAMATION | CARET | TIMES ) expression
+// Já foi feito os visitors
 expression:
 	primaryExpr #primaryExp
-	| expression mul_op = ( STAR| DIV | MOD ) expression # timesOver
+	| expression mul_op = ( TIMES| DIV | MOD ) expression # timesOver
 	| expression add_op = ( PLUS | MINUS ) expression # plusMinus
 	| expression rel_op = ( EQUALS | NOT_EQUALS | LESS | LESS_OR_EQUALS | GREATER | GREATER_OR_EQUALS ) expression # eqLt
 	| expression LOGICAL_AND expression # relAnd
@@ -273,19 +274,21 @@ literal: basicLit | compositeLit | functionLit;
 
 basicLit:
 //	NIL_LIT     #nullType
-	integer   	#integerLit
-	| string_   #stringLit
-	| float     #floatLit
-	| bool 		#boolLit;
+	DECIMAL_LIT   	#integerLit
+	| str_v = (RAW_STRING_LIT | INTERPRETED_STRING_LIT)   #stringLit
+	| FLOAT_LIT        #floatLit
+	| bool_v = (FALSE | TRUE) 		#boolLit;
 
-bool:
-    FALSE | TRUE;
 
-integer:
-	DECIMAL_LIT;
-
-float:
-    FLOAT_LIT;
+//bool:
+//    FALSE | TRUE;
+//
+//integer:
+//	DECIMAL_LIT;
+//
+//float:
+//    FLOAT_LIT;
+//string_: RAW_STRING_LIT | INTERPRETED_STRING_LIT;
 
 operandName: IDENTIFIER;
 
@@ -324,9 +327,8 @@ element: expression | literalValue;
 //		| embeddedField
 //	) tag = string_?;
 
-string_: RAW_STRING_LIT | INTERPRETED_STRING_LIT;
 
-//embeddedField: STAR? typeName;
+//embeddedField: TIMES? typeName;
 
 functionLit: FUNC (signature block?); // function
 

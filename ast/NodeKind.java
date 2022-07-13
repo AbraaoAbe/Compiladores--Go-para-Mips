@@ -9,12 +9,12 @@ package ast;
 public enum NodeKind {
 	ASSIGN_NODE {
 		public String toString() {
-            return ":=";
+            return "=";
         }
 	},
     EQ_NODE {
 		public String toString() {
-            return "=";
+            return "==";
         }
 	},
     BLOCK_NODE {
@@ -37,21 +37,21 @@ public enum NodeKind {
             return "";
         }
 	},
-    LT_NODE {
-		public String toString() {
-            return "<";
-        }
-	},
     MINUS_NODE {
 		public String toString() {
             return "-";
         }
 	},
-    OVER_NODE {
+    DIV_NODE {
 		public String toString() {
             return "/";
         }
 	},
+    MOD_NODE {
+        public String toString() {
+            return "%";
+        }
+    },
     PLUS_NODE {
 		public String toString() {
             return "+";
@@ -62,19 +62,9 @@ public enum NodeKind {
             return "program";
         }
 	},
-    READ_NODE {
-		public String toString() {
-            return "read";
-        }
-	},
     REAL_VAL_NODE {
 		public String toString() {
             return "";
-        }
-	},
-    REPEAT_NODE {
-		public String toString() {
-            return "repeat";
         }
 	},
     STR_VAL_NODE {
@@ -87,6 +77,26 @@ public enum NodeKind {
             return "*";
         }
 	},
+    LESS_NODE {
+        public String toString() {
+            return "<";
+        }
+    },
+    GREATER_NODE {
+        public String toString() {
+            return ">";
+        }
+    },
+    LESS_OR_EQUALS_NODE {
+        public String toString() {
+            return "<=";
+        }
+    },
+    GREATER_OR_EQUALS_NODE {
+        public String toString() {
+            return ">=";
+        }
+    },
     VAR_DECL_NODE {
 		public String toString() {
             return "var_decl";
@@ -102,17 +112,6 @@ public enum NodeKind {
             return "var_use";
         }
 	},
-    WRITE_NODE {
-		public String toString() {
-            return "write";
-        }
-	},
-    CONST_DECL_NODE {
-		public String toString() {
-            return "const_decl";
-        }
-	},
-
     B2I_NODE { // Type conversion.
 		public String toString() {
             return "B2I";
@@ -142,7 +141,44 @@ public enum NodeKind {
 		public String toString() {
             return "R2S";
         }
-	};
+	},
+    PRINT_NODE {
+        public String toString() {
+            return "print";
+        }
+    },
+    SCAN_NODE {
+        public String toString() {
+            return "scan";
+        }
+    },
+    ARRAY_NODE {
+        public String toString() {
+            return "arr_";
+        }
+    },
+    FUNC_NODE {
+        public String toString() {
+            return "";
+        }
+    },
+    // Relational operations
+    // --------------------
+    AND_NODE {
+        public String toString() {
+            return "&&";
+        }
+    },
+    OR_NODE {
+        public String toString() {
+            return "||";
+        }
+    },
+    NEQ_NODE {
+        public String toString() {
+            return "!=";
+        }
+    };
 	
 	public static boolean hasData(NodeKind kind) {
 		switch(kind) {
@@ -152,6 +188,8 @@ public enum NodeKind {
 	        case STR_VAL_NODE:
 	        case VAR_DECL_NODE:
 	        case VAR_USE_NODE:
+            case FUNC_NODE:
+            case ARRAY_NODE:
 	            return true;
 	        default:
 	            return false;
