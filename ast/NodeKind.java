@@ -112,6 +112,16 @@ public enum NodeKind {
             return "var_use";
         }
 	},
+    FUNC_DECL_NODE {
+		public String toString() {
+            return "func_decl";
+        }
+	},
+    FUNC_USE_NODE {
+		public String toString() {
+            return "func_use";
+        }
+	},
     B2I_NODE { // Type conversion.
 		public String toString() {
             return "B2I";

@@ -12,9 +12,9 @@ options {
 
 //Antigo sourceFile 
 sourceFile:
-	((functionDecl) eos)* EOF #funcDeclLoop
+	((functionDecl ) eos)* EOF ;
 //	| ((methodDecl) eos)* EOF #methDeclLoop
-	| ((varDecl) eos)* EOF #declvarLoop;
+//	| (varDecl eos)* EOF #declvarLoop;
 
 
 //!MODIFICACAO CANCELADA

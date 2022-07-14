@@ -100,8 +100,12 @@ public class AST {
 	    System.err.printf("\"];\n");
 
 	    for (int i = 0; i < this.children.size(); i++) {
-	        int childNr = this.children.get(i).printNodeDot();
-	        System.err.printf("node%d -> node%d;\n", myNr, childNr);
+			//se tirar do if da null pointer exception
+			if (this.children.get(i) != null){
+				int childNr = this.children.get(i).printNodeDot();
+	        	System.err.printf("node%d -> node%d;\n", myNr, childNr);
+			}
+	        
 	    }
 	    return myNr;
 	}

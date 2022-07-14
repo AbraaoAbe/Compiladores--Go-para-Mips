@@ -38,6 +38,7 @@ import parser.GoParser.TimesOverContext;
 import parser.GoParserBaseVisitor;
 import tables.StrTable;
 import tables.VarTable;
+import tables.FuncTable;
 import typing.Conv;
 import typing.Conv.Unif;
 import typing.Type;
@@ -71,7 +72,7 @@ public class SemanticChecker extends GoParserBaseVisitor<AST> {
 
 	private StrTable st = new StrTable();   // Tabela de strings.
     private VarTable vt = new VarTable();   // Tabela de variáveis.
-//	private FuncTable ft = new FuncTable();
+	private FuncTable ft = new FuncTable();
 
     Type lastDeclType;  // Variável "global" com o último tipo declarado.
 
@@ -106,6 +107,37 @@ public class SemanticChecker extends GoParserBaseVisitor<AST> {
         }
         idx = vt.addVar(text, line, NO_TYPE);
         return new AST(VAR_DECL_NODE, idx, NO_TYPE);
+    }
+
+	// Testa se o dado token foi declarado antes.
+    // Se sim, cria e retorna um nó de 'var use'.
+    AST checkFunc(Token token) {
+    	String text = token.getText();
+    	int line = token.getLine();
+   		int idx = ft.lookupFunc(text);
+    	if (idx == -1) {
+    		System.err.printf("SEMANTIC ERROR (%d): func '%s' was not declared.\n", line, text);
+    		// A partir de agora vou abortar no primeiro erro para facilitar.
+    		System.exit(1);
+            return null; // Never reached.
+        }
+    	return new AST(FUNC_USE_NODE, idx, ft.getType(idx));
+    }
+
+    // Cria uma nova variável a partir do dado token.
+    // Retorna um nó do tipo 'var declaration'.
+    AST newFunc(Token token) {
+    	String text = token.getText();
+    	int line = token.getLine();
+   		int idx = ft.lookupFunc(text);
+        if (idx != -1) {
+        	System.err.printf("SEMANTIC ERROR (%d): variable '%s' already declared at line %d.\n", line, text, vt.getLine(idx));
+        	// A partir de agora vou abortar no primeiro erro para facilitar.
+        	System.exit(1);
+            return null; // Never reached.
+        }
+        idx = ft.addFunc(text, line, NO_TYPE);
+        return new AST(FUNC_DECL_NODE, idx, NO_TYPE);
     }
 
     // ----------------------------------------------------------------------------
@@ -158,16 +190,17 @@ public class SemanticChecker extends GoParserBaseVisitor<AST> {
     	// estilo de loop clássico...
 
 		//visita o sourceFile: ((functionDecl) eos)* EOF #funcDeclLoop
-    	for (int i = 0; i < ctx.funcDeclLoop().size(); i++) {
-    		AST child = visit(ctx.funcDeclLoop(i));
+    	for (int i = 0; i < ctx.functionDecl().size(); i++) {
+    		AST child = visit(ctx.functionDecl(i));
     		this.root.addChild(child);
     	}
+	
 
 		//visita o sourceFile: ((declaration) eos)* EOF #DeclvarLoop
-    	for (int i = 0; i < ctx.DeclvarLoop().size(); i++) {
-    		AST child = visit(ctx.DeclvarLoop(i));
-    		this.root.addChild(child);
-    	}
+    	//for (int i = 0; i < ctx.DeclvarLoop().size(); i++) {
+    	//	AST child = visit(ctx.DeclvarLoop(i));
+    	//	this.root.addChild(child);
+    	//}
     	
     	// Como esta é a regra inicial, chegamos na raiz da AST.
 		return this.root;
@@ -236,7 +269,7 @@ public class SemanticChecker extends GoParserBaseVisitor<AST> {
 		AST varList = AST.newSubtree(VAR_LIST_NODE, NO_TYPE);
     	
 		for (int i = 0; i < ctx.IDENTIFIER().size(); i++) {
-    		AST node = newVar(ctx.IDENTIFIER(i)); // Precisa pegar o tipo da variável
+    		AST node = newVar(ctx.IDENTIFIER(i).getSymbol()); // Precisa pegar o tipo da variável
 			varList.addChild(node);
     	}
     	
@@ -489,6 +522,7 @@ public class SemanticChecker extends GoParserBaseVisitor<AST> {
 	}
 
 	// Visita a regra expr: expr op=(PLUS | MINUS) expr
+	//expression add_op = ( PLUS | MINUS ) expression # plusMinus
 	@Override
 	public AST visitPlusMinus(PlusMinusContext ctx) {
 		// Visita recursivamente as duas subexpressões.
