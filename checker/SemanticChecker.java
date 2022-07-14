@@ -217,16 +217,17 @@ public class SemanticChecker extends GoParserBaseVisitor<AST> {
 	public AST visitFunctionDecl(FunctionDeclContext ctx) {
     	
 
-		AST func = AST.newSubtree(FUNC_DECL_NODE, NO_TYPE);
+		
     	
-		AST node = newFunc(ctx.IDENTIFIER().getSymbol()); // Precisa pegar o tipo da funcao
+		AST func = newFunc(ctx.IDENTIFIER().getSymbol()); // Precisa pegar o tipo da funcao
 
-		visit(ctx.signature());
+		AST sig = visit(ctx.signature());
 
 		AST block = visit(ctx.block());
+
+		//func.addChild(sig);
+		func.addChild(block);
 		
-		func.addChild(node);
-    	
 
 		return func;
 	
