@@ -188,7 +188,13 @@ public enum NodeKind {
         public String toString() {
             return "!=";
         }
-    };
+    },
+    STMT_LIST_NODE {
+		public String toString() {
+            return "var_list";
+        }
+	};
+
 	
 	public static boolean hasData(NodeKind kind) {
 		switch(kind) {
@@ -198,6 +204,8 @@ public enum NodeKind {
 	        case STR_VAL_NODE:
 	        case VAR_DECL_NODE:
 	        case VAR_USE_NODE:
+            case FUNC_DECL_NODE:
+	        case FUNC_USE_NODE:
             case FUNC_NODE:
             case ARRAY_NODE:
 	            return true;

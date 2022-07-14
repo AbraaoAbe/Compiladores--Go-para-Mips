@@ -68,7 +68,7 @@ varSpec:
  	// var a, b, x int = 1, 2, 3
 
 //BLOCO DE STATUS
-block: L_CURLY statementList? R_CURLY;
+block: L_CURLY statementList R_CURLY;
 
 statementList: (statement eos?)+;
 //statementList: ((SEMI? | {closingBracket()}?) statement)+;

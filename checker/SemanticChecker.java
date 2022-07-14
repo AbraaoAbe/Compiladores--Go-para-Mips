@@ -15,6 +15,10 @@ import ast.AST;
 import parser.GoLexer;
 import parser.GoParser;
 import parser.GoParser.SourceFileContext;
+import parser.GoParser.FunctionDeclContext;
+import parser.GoParser.BlockContext;
+import parser.GoParser.StatementListContext;
+//import parser.GoParser.
 //import parser.GoParser.Assign_stmtContext;
 import parser.GoParser.VarDeclContext;
 import parser.GoParser.EqLtContext;
@@ -166,6 +170,8 @@ public class SemanticChecker extends GoParserBaseVisitor<AST> {
         System.out.print("\n\n");
     	System.out.print(vt);
     	System.out.print("\n\n");
+		System.out.print(ft);
+    	System.out.print("\n\n");
     }
 
     // Exibe a AST no formato DOT em stderr.
@@ -179,7 +185,7 @@ public class SemanticChecker extends GoParserBaseVisitor<AST> {
 	// Visita a regra sourceFile: ((functionDecl) eos)* EOF #funcDeclLoop
 	//							| ((methodDecl) eos)* EOF #methDeclLoop
 	//							| ((declaration) eos)* EOF #DeclvarLoop;
-//    @Override
+    @Override
 	public AST visitSourceFile(SourceFileContext ctx) {
     	this.root = AST.newSubtree(PROGRAM_NODE, NO_TYPE);
     	// No caso de não-terminais com fechos (* ou +), a chamada do método
@@ -205,6 +211,57 @@ public class SemanticChecker extends GoParserBaseVisitor<AST> {
     	// Como esta é a regra inicial, chegamos na raiz da AST.
 		return this.root;
 	}
+
+	//visita a regra functionDecl: FUNC IDENTIFIER (signature block?);
+	@Override
+	public AST visitFunctionDecl(FunctionDeclContext ctx) {
+    	
+
+		AST func = AST.newSubtree(FUNC_DECL_NODE, NO_TYPE);
+    	
+		AST node = newFunc(ctx.IDENTIFIER().getSymbol()); // Precisa pegar o tipo da funcao
+
+		visit(ctx.signature());
+
+		AST block = visit(ctx.block());
+		
+		func.addChild(node);
+    	
+
+		return func;
+	
+	}
+
+	//visita a regra block: L_CURLY statementList R_CURLY;
+	@Override
+	public AST visitBlock(BlockContext ctx) {
+		AST block = AST.newSubtree(BLOCK_NODE, NO_TYPE);
+    	
+		AST node = visit(ctx.statementList());
+		
+		block.addChild(node);
+    	
+
+		return block;
+	
+	}
+
+	//statementList: (statement eos?)+;
+	@Override
+	public AST visitStatementList(StatementListContext ctx) {
+    
+		AST stmtList = AST.newSubtree(STMT_LIST_NODE, NO_TYPE);
+    	
+		for (int i = 0; i < ctx.statement().size(); i++) {
+			AST child = visit(ctx.statement(i));
+			stmtList.addChild(child);
+    	}
+    	
+    	return stmtList;
+	}
+
+	
+	
 
     // Visita a regra vars_sect: VAR var_decl*ctx.IDENTIFIER(i)PE);
     // 	// No caso de não-terminais com fechos (* ou +), a chamada do método
