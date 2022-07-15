@@ -17,19 +17,23 @@ import parser.GoLexer;
 import parser.GoParser;
 import parser.GoParser.SourceFileContext;
 import parser.GoParser.FunctionDeclContext;
+import parser.GoParser.FunctionLitvalContext;
 import parser.GoParser.BlockContext;
 import parser.GoParser.StatementListContext;
 import parser.GoParser.AssignmentContext;
 //import parser.GoParser.Assign_stmtContext;
 import parser.GoParser.VarDeclContext;
 import parser.GoParser.EqLtContext;
+import parser.GoParser.ExprIdContext;
 //import parser.GoParser.ExprFalseContext;
 import parser.GoParser.BoolLitContext;
 import parser.GoParser.RelAndContext;
 import parser.GoParser.RelOrContext;
 import parser.GoParser.IntegerLitContext;
+import parser.GoParser.ParameterDeclContext;
 import parser.GoParser.FloatLitContext;
 import parser.GoParser.StringLitContext;
+import parser.GoParser.ExprParContext;
 //import parser.GoParser.ExprIdContext;
 //import parser.GoParser.ExprIntValContext;
 //import parser.GoParser.ExprParContext;
@@ -450,15 +454,15 @@ public class SemanticChecker extends GoParserBaseVisitor<AST> {
     	Type lt = l.type;
     	Type rt = r.type;
 
-        if (lt == BOOL_TYPE && rt != BOOL_TYPE) typeError(lineNo, ":=", lt, rt);
-        if (lt == STRING_TYPE  && rt != STRING_TYPE)  typeError(lineNo, ":=", lt, rt);
-        if (lt == INT_TYPE  && rt != INT_TYPE)  typeError(lineNo, ":=", lt, rt);
+        if (lt == BOOL_TYPE && rt != BOOL_TYPE) typeError(lineNo, "=", lt, rt);
+        if (lt == STRING_TYPE  && rt != STRING_TYPE)  typeError(lineNo, "=", lt, rt);
+        if (lt == INT_TYPE  && rt != INT_TYPE)  typeError(lineNo, "=", lt, rt);
 
         if (lt == FLOAT_TYPE) {
         	if (rt == INT_TYPE) {
         		r = Conv.createConvNode(I2R, r);
         	} else if (rt != FLOAT_TYPE) {
-        		typeError(lineNo, ":=", lt, rt);
+        		typeError(lineNo, "=", lt, rt);
             }
         }
 
@@ -761,6 +765,70 @@ public class SemanticChecker extends GoParserBaseVisitor<AST> {
 		int idx = st.addStr(value);
 		// Campo 'data' do nó da AST guarda o índice na tabela.
 		return new AST(STR_VAL_NODE, idx, STRING_TYPE);
+	}
+
+	@Override
+	// Visita a regra expr: ID
+	public AST visitExprId(ExprIdContext ctx) {
+		// Fim da recursão, retorna um nó de 'var use'.
+		return checkVar(ctx.IDENTIFIER().getSymbol());
+	}
+
+	// Visita a regra expr: LPAR expr RPAR
+	@Override
+	public AST visitExprPar(ExprParContext ctx) {
+		// Propaga o nó criado para a expressão.
+		return visit(ctx.expression());
+	}
+
+	// Visita a regra expr: LPAR expr RPAR
+	//@Override
+	//public AST visitArrayLitval(ArrayLitvalContext ctx) {
+		// Propaga o nó criado para a expressão.
+	//	return visit(ctx.expression());
+	//}
+
+	// Visita a regra expression: functionLit
+	//functionLit: IDENTIFIER parameters
+	@Override
+	public AST visitFunctionLitval(FunctionLitvalContext ctx) {
+		// Visita o parametro da direita.
+		AST parameters = visit(ctx.functionLit().parameters());
+		// Visita o identificador da esquerda.
+		Token idToken = ctx.functionLit().IDENTIFIER().getSymbol();
+		AST func = checkFunc(idToken);
+
+		AST funccall = AST.newSubtree(FUNC_CALL_NODE, NO_TYPE, func);
+		return funccall;
+	}
+
+	//parameters:
+	//L_PAREN (parameterDecl (COMMA parameterDecl)* COMMA?)? R_PAREN;
+	@Override
+	public AST visitParameters(GoParser.ParametersContext ctx) {
+		AST list_params =  AST.newSubtree(PARAMS_LIST_NODE, NO_TYPE);
+
+		for (int i = 0; i < ctx.parameterDecl().size(); i++) {
+    		AST child = visit(ctx.parameterDecl(i));
+    		list_params.addChild(child);
+    	}
+		return list_params;
+	}
+
+
+	//parameterDecl: IDENTIFIER type_;
+	@Override
+	public AST visitParameterDecl(ParameterDeclContext ctx) {
+
+		AST var = newVar(ctx.IDENTIFIER().getSymbol());
+
+		visit(ctx.type_());
+
+		AST child = var.children.get(0);
+		child.type = lastDeclType;
+		vt.setType(child.intData, lastDeclType);
+
+		return var;
 	}
 
 //	@Override
