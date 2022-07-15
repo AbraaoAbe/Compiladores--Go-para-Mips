@@ -12,18 +12,24 @@ import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
 import ast.AST;
+import ast.NodeKind;
 import parser.GoLexer;
 import parser.GoParser;
 import parser.GoParser.SourceFileContext;
 import parser.GoParser.FunctionDeclContext;
 import parser.GoParser.BlockContext;
 import parser.GoParser.StatementListContext;
-//import parser.GoParser.
+import parser.GoParser.AssignmentContext;
 //import parser.GoParser.Assign_stmtContext;
 import parser.GoParser.VarDeclContext;
 import parser.GoParser.EqLtContext;
 //import parser.GoParser.ExprFalseContext;
 import parser.GoParser.BoolLitContext;
+import parser.GoParser.RelAndContext;
+import parser.GoParser.RelOrContext;
+import parser.GoParser.IntegerLitContext;
+import parser.GoParser.FloatLitContext;
+import parser.GoParser.StringLitContext;
 //import parser.GoParser.ExprIdContext;
 //import parser.GoParser.ExprIntValContext;
 //import parser.GoParser.ExprParContext;
@@ -32,11 +38,11 @@ import parser.GoParser.BoolLitContext;
 //import parser.GoParser.ExprTrueContext;
 //import parser.GoParser.If_stmtContext;
 import parser.GoParser.PlusMinusContext;
+import parser.GoParser.TimesOverContext;
 //import parser.GoParser.Read_stmtContext;
 //import parser.GoParser.Repeat_stmtContext;
 //import parser.GoParser.StmtContext;
 //import parser.GoParser.Stmt_sectContext;
-import parser.GoParser.TimesOverContext;
 //import parser.GoParser.Vars_sectContext;
 //import parser.GoParser.Write_stmtContext;
 import parser.GoParserBaseVisitor;
@@ -233,19 +239,43 @@ public class SemanticChecker extends GoParserBaseVisitor<AST> {
 	
 	}
 
+	/* 
 	//visita a regra block: L_CURLY statementList R_CURLY;
 	@Override
 	public AST visitBlock(BlockContext ctx) {
 		AST block = AST.newSubtree(BLOCK_NODE, NO_TYPE);
     	
 		AST node = visit(ctx.statementList());
+
+		AST random = AST.newSubtree(VAR_USE_NODE, NO_TYPE);
 		
 		block.addChild(node);
+		block.addChild(random);
     	
 
 		return block;
 	
 	}
+	*/
+
+	@Override
+    public AST visitBlock(GoParser.BlockContext ctx){
+        AST blockTree = (AST.newSubtree(ast.NodeKind.BLOCK_NODE,Type.NO_TYPE));
+        try {        
+            int tam = ctx.statementList().statement().size();
+            
+            for(int i = 0;i < tam;i++){
+                AST teste = visit(ctx.statementList().statement(i));    
+
+            	blockTree.addChild(teste);
+            }
+        }    catch(Exception e) {
+            // System.out.printf("[visitBlock] Caiu exception statementList [%s]\n",e.toString());
+        }
+        
+        return blockTree;
+
+    }
 
 	//statementList: (statement eos?)+;
 	@Override
@@ -279,25 +309,7 @@ public class SemanticChecker extends GoParserBaseVisitor<AST> {
 	// }
 
 	// Visita a regra varDecl: VAR varSpec ;
-    @Override
-	public AST visitVarDecl(VarDeclContext ctx) {
-    	// Para facilitar, sempre crio um nó com a lista das variáveis.
-    	// Assim, não precisa ficar testando depois se ele existe ou não.
-    	// Se não houverem variáveis declaradas, o nó fica sem filhos.
-    	AST node = AST.newSubtree(VAR_LIST_NODE, NO_TYPE);
-    	// No caso de não-terminais com fechos (* ou +), a chamada do método
-    	// correspondente retorna uma lista com todos os elementos da Parse
-    	// Tree que entraram no fecho. Assim, podemos percorrer (visitar) a
-    	// lista para construir as subárvores dos filhos.
-    	// Também é possível usar o iterador da lista aqui mas prefiro esse
-    	// estilo de loop clássico...
-		visit(ctx.varSpec());
-    	// for (int i = 0; i < ctx.var_decl().size(); i++) {
-    	// 	AST child = visit(ctx.var_decl(i));
-    	// 	node.addChild(child);
-    	// }
-    	return node;
-	}
+    
 
 	// varSpec:
 	// identifierList type_ (ASSIGN expressionList)?;
@@ -313,7 +325,9 @@ public class SemanticChecker extends GoParserBaseVisitor<AST> {
 
 		for (int i = 0; i < idList.getSizeChild(); i++) {
 			AST child = idList.children.get(i);
+			//set type 
 			child.type = lastDeclType;
+			//vartable
 			vt.setType(child.intData, lastDeclType);
     	}
     	
@@ -375,6 +389,18 @@ public class SemanticChecker extends GoParserBaseVisitor<AST> {
 	public AST visitArrayType(GoParser.ArrayTypeContext ctx){
 		this.lastDeclType = Type.ARRAY_TYPE;
     	return null; // Java says must return something even when Void
+	}
+
+	// Visita a regra assignment: IDENTIFIER index? ASSIGN expression;
+	@Override
+	public AST visitAssignment(AssignmentContext ctx) {
+		// Visita a expressão da direita.
+		AST exprNode = visit(ctx.expression());
+		// Visita o identificador da esquerda.
+		Token idToken = ctx.IDENTIFIER().getSymbol();
+		AST idNode = checkVar(idToken);
+		// Faz as verificações de tipos.
+		return checkAssign(idToken.getLine(), idNode, exprNode);
 	}
 
     // Visita a regra typeDecl: type_spec ID SEMI
@@ -541,13 +567,7 @@ public class SemanticChecker extends GoParserBaseVisitor<AST> {
 	//	| expression rel_op = ( EQUALS | NOT_EQUALS | LESS | LESS_OR_EQUALS | GREATER | GREATER_OR_EQUALS ) expression # eqLt
 	//	| expression LOGICAL_AND expression # relAnd
 	//	| expression LOGICAL_OR expression #relOr;
-	@Override
-	public AST visitPrimaryExpr(GoParser.PrimaryExprContext ctx) {
-		// Propaga o nó criado para a expressão.
-		// Precisa fazer algo
-		return null;
-	}
-
+	
 	// Visita a regra expr: expr op=(TIMES | OVER) expr
 	@Override
 	public AST visitTimesOver(TimesOverContext ctx) {

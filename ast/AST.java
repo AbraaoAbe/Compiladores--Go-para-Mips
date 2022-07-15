@@ -54,6 +54,9 @@ public class AST {
 		// evitar uma exceção.
 	    return this.children.get(idx);
 	}
+	public List<AST> getListChild(){
+		return this.children;
+	}
 
 	//Retorna o tamanho do filho
 	public int getSizeChild(){
@@ -85,7 +88,8 @@ public class AST {
 	    }
 	    if (this.kind == NodeKind.VAR_DECL_NODE || this.kind == NodeKind.VAR_USE_NODE) {
 	    	System.err.printf("%s@", vt.getName(this.intData));
-	    } else {
+	    } 
+		else {
 	    	System.err.printf("%s", this.kind.toString());
 	    }
 	    if (NodeKind.hasData(this.kind)) {

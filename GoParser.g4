@@ -88,8 +88,8 @@ statement:
 	| forStmt;
 
 simpleStmt:
-	incDecStmt
-	| ioStmt
+//	incDecStmt 
+	ioStmt
 	| assignment
 	| expressionStmt
 //	| shortVarDecl
@@ -105,17 +105,8 @@ incDecStmt: expression (PLUS_PLUS | MINUS_MINUS);
 //assignment: expressionList assign_op expressionList;
 //alterado o assignment pois do jeito que tava, aceitava maluquice: 1 = 2
 //index? indica o acesso ao arrayASSIGN
-assignment: operandName index? assign_op expression;
+assignment: IDENTIFIER index? ASSIGN expression;
 
-assign_op: (
-		PLUS
-		| MINUS
-		| OR
-		| CARET
-		| TIMES
-		| DIV
-		| MOD
-	)? ASSIGN;
 
 //DECLARACAO IMPLICITA x := 0 (FAZ ELE SER INT)
 //shortVarDecl: identifierList DECLARE_ASSIGN expressionList;
@@ -234,7 +225,7 @@ parameters:
 	L_PAREN (parameterDecl (COMMA parameterDecl)* COMMA?)? R_PAREN;
 
 //parameterDecl: identifierList? type_;
-parameterDecl: identifierList (basicLit | compositeLit);
+parameterDecl: identifierList (expression);
 
 
 //REMOVIDO: unary_op (nao faz sentido pra mim )
@@ -246,38 +237,47 @@ parameterDecl: identifierList (basicLit | compositeLit);
 	//| unary_op = ( PLUS | MINUS | EXCLAMATION | CARET | TIMES ) expression
 // Já foi feito os visitors
 expression:
-	primaryExpr #primaryExp
-	| expression mul_op = ( TIMES| DIV | MOD ) expression # timesOver
+	//primaryExpr #primaryExp
+	 expression mul_op = ( TIMES| DIV | MOD ) expression # timesOver
 	| expression add_op = ( PLUS | MINUS ) expression # plusMinus
 	| expression rel_op = ( EQUALS | NOT_EQUALS | LESS | LESS_OR_EQUALS | GREATER | GREATER_OR_EQUALS ) expression # eqLt
 	| expression LOGICAL_AND expression # relAnd
-	| expression LOGICAL_OR expression #relOr; 
+	| expression LOGICAL_OR expression #relOr
+	| L_PAREN expression R_PAREN	# exprPar
+	| IDENTIFIER					# exprId
+	| DECIMAL_LIT   				#integerLit
+	| str_v = (RAW_STRING_LIT | INTERPRETED_STRING_LIT)   #stringLit
+	| FLOAT_LIT        				#floatLit
+	| bool_v = (FALSE | TRUE) 		#boolLit
+	| compositeLit					#composelitval 
+	| functionLit					#functionLitval
+	; 
 
-primaryExpr:
-	operand
-	| primaryExpr ( index | arguments
+//primaryExpr:
+//	operand
+//	| primaryExpr ( index | arguments
 //	| conversion
 //	| methodExpr
 //	| primaryExpr ((DOT IDENTIFIER) | index | arguments
 //		| slice_
 //		| typeAssertion
-	);
+//	);
 
 
 //conversion: nonNamedType L_PAREN expression COMMA? R_PAREN;
 //
 //nonNamedType: typeLit | L_PAREN nonNamedType R_PAREN;
 
-operand: literal | operandName | L_PAREN expression R_PAREN;
+//operand: literal | IDENTIFIER | L_PAREN expression R_PAREN;
 
-literal: basicLit | compositeLit | functionLit;
+//literal: basicLit | compositeLit | functionLit;
 
-basicLit:
+//basicLit:
 //	NIL_LIT     #nullType
-	DECIMAL_LIT   	#integerLit
-	| str_v = (RAW_STRING_LIT | INTERPRETED_STRING_LIT)   #stringLit
-	| FLOAT_LIT        #floatLit
-	| bool_v = (FALSE | TRUE) 		#boolLit;
+//	DECIMAL_LIT   	#integerLit
+//	| str_v = (RAW_STRING_LIT | INTERPRETED_STRING_LIT)   #stringLit
+//	| FLOAT_LIT        #floatLit
+//	| bool_v = (FALSE | TRUE) 		#boolLit;
 
 
 //bool:
@@ -290,7 +290,7 @@ basicLit:
 //    FLOAT_LIT;
 //string_: RAW_STRING_LIT | INTERPRETED_STRING_LIT;
 
-operandName: IDENTIFIER;
+//operandName: IDENTIFIER;
 
 //qualifiedIdent: IDENTIFIER DOT IDENTIFIER;
 
