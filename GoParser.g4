@@ -54,6 +54,7 @@ expressionList: expression (COMMA expression)*;
 
 functionDecl: FUNC IDENTIFIER (signature block?);
 
+
 //methodDecl: FUNC receiver IDENTIFIER ( signature block?);
 //
 //receiver: parameters;
@@ -225,7 +226,7 @@ parameters:
 	L_PAREN (parameterDecl (COMMA parameterDecl)* COMMA?)? R_PAREN;
 
 //parameterDecl: identifierList? type_;
-parameterDecl: identifierList (expression);
+parameterDecl: IDENTIFIER type_;
 
 
 //REMOVIDO: unary_op (nao faz sentido pra mim )
@@ -249,7 +250,7 @@ expression:
 	| str_v = (RAW_STRING_LIT | INTERPRETED_STRING_LIT)   #stringLit
 	| FLOAT_LIT        				#floatLit
 	| bool_v = (FALSE | TRUE) 		#boolLit
-	| compositeLit					#composelitval 
+	| arrayType						#arrayLitval 
 	| functionLit					#functionLitval
 	; 
 
@@ -295,7 +296,7 @@ expression:
 //qualifiedIdent: IDENTIFIER DOT IDENTIFIER;
 
 //compositeLit: literalType literalValue;
-compositeLit: arrayType literalValue;
+//compositeLit: arrayType literalValue;
 
 //TIPOS LITERAIS
 //literalType:
@@ -305,15 +306,15 @@ compositeLit: arrayType literalValue;
 //	| mapType
 //	| typeName;
 
-literalValue: L_CURLY (elementList COMMA?)? R_CURLY;
+//literalValue: L_CURLY (elementList COMMA?)? R_CURLY;
 
-elementList: keyedElement (COMMA keyedElement)*;
+//elementList: keyedElement (COMMA keyedElement)*;
 
-keyedElement: (key COLON)? element;
+//keyedElement: (key COLON)? element;
 
-key: expression | literalValue;
+//key: expression | literalValue;
 
-element: expression | literalValue;
+//element: expression | literalValue;
 
 //TIPO STRUCT
 //structType: STRUCT L_CURLY (fieldDecl eos)* R_CURLY;
@@ -330,7 +331,7 @@ element: expression | literalValue;
 
 //embeddedField: TIMES? typeName;
 
-functionLit: FUNC (signature block?); // function
+functionLit: IDENTIFIER parameters ; // func() call()
 
 index: L_BRACKET expression R_BRACKET;
 

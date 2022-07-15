@@ -122,6 +122,21 @@ public enum NodeKind {
             return "func_use";
         }
 	},
+    FUNC_CALL_NODE {
+		public String toString() {
+            return "func_call";
+        }
+	},
+    PARAMS_LIST_NODE { // Type conversion.
+		public String toString() {
+            return "params_list";
+        }
+	},
+    PARAMS_NODE { // Type conversion.
+		public String toString() {
+            return "params";
+        }
+	},
     B2I_NODE { // Type conversion.
 		public String toString() {
             return "B2I";
