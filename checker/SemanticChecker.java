@@ -57,6 +57,8 @@ import typing.Conv;
 import typing.Conv.Unif;
 import typing.Type;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 /*
@@ -150,9 +152,42 @@ public class SemanticChecker extends GoParserBaseVisitor<AST> {
         	System.exit(1);
             return null; // Never reached.
         }
-        idx = ft.addFunc(text, line, NO_TYPE);
+        idx = ft.addFunc(text, line, null, NO_TYPE, null);
         return new AST(FUNC_DECL_NODE, idx, NO_TYPE);
     }
+
+	void newFunc(GoParser.FunctionDeclContext ctx) {
+		String text = ctx.getChild(1).getText();
+		int line = ctx.IDENTIFIER().getSymbol().getLine();
+		int idx = ft.lookupFunc(text);
+		if (idx != -1) {
+			System.err.printf(
+					"SEMANTIC ERROR (%d): function '%s' already declared at line %d.\n",
+					line, text, ft.getLine(idx));
+			System.exit(1);
+//			return null;
+
+		}
+		// Cria a lista de param
+		List<Type> param = new ArrayList<Type>();
+
+		List<GoParser.ParameterDeclContext> parameterDeclContext = ctx.signature().parameters().parameterDecl();
+		int tam = parameterDeclContext.size();
+
+		for(int i = 0; i < tam; i++) {
+//			String tipo = parameterDeclContext.get(i).type_().typeName().IDENTIFIER().getSymbol().getText();
+//			setLastDeclType(tipo);
+			visit(parameterDeclContext.get(i).type_());
+			param.add(lastDeclType);
+		}
+
+
+		//cria list retorno
+		visit(ctx.signature().type_());
+		Type returns = lastDeclType;
+		ft.addFunc(text, line, param, returns, new VarTable());
+
+	}
 
     // ----------------------------------------------------------------------------
     // Type checking and inference.
@@ -225,10 +260,10 @@ public class SemanticChecker extends GoParserBaseVisitor<AST> {
 	//visita a regra functionDecl: FUNC IDENTIFIER (signature block?);
 	@Override
 	public AST visitFunctionDecl(FunctionDeclContext ctx) {
-    	
 
-		
-    	
+
+
+
 		AST func = newFunc(ctx.IDENTIFIER().getSymbol()); // Precisa pegar o tipo da funcao
 
 		AST sig = visit(ctx.signature());
@@ -237,11 +272,25 @@ public class SemanticChecker extends GoParserBaseVisitor<AST> {
 
 		//func.addChild(sig);
 		func.addChild(block);
-		
+
 
 		return func;
-	
-	}
+//
+//	}
+//	//	signature:
+//	//	parameters type_?;
+//	public AST visitSignature(GoParser.SignatureContext  ctx){
+//
+//		AST sig = new AST();
+//
+//		AST params = visit(ctx.parameters());
+//		lastDeclType = null;
+//		visit(ctx.type_());
+//		if (lastDeclType){
+//			AST retorno = new AST()
+//			sig.addChild();
+//		}
+//	}
 
 	/* 
 	//visita a regra block: L_CURLY statementList R_CURLY;
@@ -790,46 +839,46 @@ public class SemanticChecker extends GoParserBaseVisitor<AST> {
 
 	// Visita a regra expression: functionLit
 	//functionLit: IDENTIFIER parameters
-	@Override
-	public AST visitFunctionLitval(FunctionLitvalContext ctx) {
-		// Visita o parametro da direita.
-		AST parameters = visit(ctx.functionLit().parameters());
-		// Visita o identificador da esquerda.
-		Token idToken = ctx.functionLit().IDENTIFIER().getSymbol();
-		AST func = checkFunc(idToken);
-
-		AST funccall = AST.newSubtree(FUNC_CALL_NODE, NO_TYPE, func);
-		return funccall;
-	}
+//	@Override
+//	public AST visitFunctionLitval(FunctionLitvalContext ctx) {
+//		// Visita o parametro da direita.
+//		AST parameters = visit(ctx.functionLit().arguments());
+//		// Visita o identificador da esquerda.
+//		Token idToken = ctx.functionLit().IDENTIFIER().getSymbol();
+//		AST func = checkFunc(idToken);
+//
+//		AST funccall = AST.newSubtree(FUNC_CALL_NODE, NO_TYPE, func);
+//		return funccall;
+//	}
 
 	//parameters:
 	//L_PAREN (parameterDecl (COMMA parameterDecl)* COMMA?)? R_PAREN;
-	@Override
-	public AST visitParameters(GoParser.ParametersContext ctx) {
-		AST list_params =  AST.newSubtree(PARAMS_LIST_NODE, NO_TYPE);
-
-		for (int i = 0; i < ctx.parameterDecl().size(); i++) {
-    		AST child = visit(ctx.parameterDecl(i));
-    		list_params.addChild(child);
-    	}
-		return list_params;
-	}
-
-
-	//parameterDecl: IDENTIFIER type_;
-	@Override
-	public AST visitParameterDecl(ParameterDeclContext ctx) {
-
-		AST var = newVar(ctx.IDENTIFIER().getSymbol());
-
-		visit(ctx.type_());
-
-		AST child = var.children.get(0);
-		child.type = lastDeclType;
-		vt.setType(child.intData, lastDeclType);
-
-		return var;
-	}
+//	@Override
+//	public AST visitParameters(GoParser.ParametersContext ctx) {
+//		AST list_params =  AST.newSubtree(PARAMS_LIST_NODE, NO_TYPE);
+//
+//		for (int i = 0; i < ctx.parameterDecl().size(); i++) {
+//    		AST child = visit(ctx.parameterDecl(i));
+//    		list_params.addChild(child);
+//    	}
+//		return list_params;
+//	}
+//
+//
+//	//parameterDecl: IDENTIFIER type_;
+//	@Override
+//	public AST visitParameterDecl(ParameterDeclContext ctx) {
+//
+//		AST var = newVar(ctx.IDENTIFIER().getSymbol());
+//
+//		visit(ctx.type_());
+//
+//		AST child = var.children.get(0);
+//		child.type = lastDeclType;
+//		vt.setType(child.intData, lastDeclType);
+//
+//		return var;
+//	}
 
 //	@Override
 //	// Visita a regra expr: ID

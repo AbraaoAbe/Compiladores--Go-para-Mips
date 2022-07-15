@@ -217,7 +217,6 @@ functionType: FUNC signature;
 // fmt.Scan()
 
 signature:
-//	parameters result
 	parameters type_?;
     // os parâmetros da função mais o tipo do retorno, caso não tenho tipo do retorn a função não retorna nada
 //result: parameters | type_;
@@ -252,101 +251,15 @@ expression:
 	| bool_v = (FALSE | TRUE) 		#boolLit
 	| arrayType						#arrayLitval 
 	| functionLit					#functionLitval
-	; 
+	;
 
-//primaryExpr:
-//	operand
-//	| primaryExpr ( index | arguments
-//	| conversion
-//	| methodExpr
-//	| primaryExpr ((DOT IDENTIFIER) | index | arguments
-//		| slice_
-//		| typeAssertion
-//	);
-
-
-//conversion: nonNamedType L_PAREN expression COMMA? R_PAREN;
-//
-//nonNamedType: typeLit | L_PAREN nonNamedType R_PAREN;
-
-//operand: literal | IDENTIFIER | L_PAREN expression R_PAREN;
-
-//literal: basicLit | compositeLit | functionLit;
-
-//basicLit:
-//	NIL_LIT     #nullType
-//	DECIMAL_LIT   	#integerLit
-//	| str_v = (RAW_STRING_LIT | INTERPRETED_STRING_LIT)   #stringLit
-//	| FLOAT_LIT        #floatLit
-//	| bool_v = (FALSE | TRUE) 		#boolLit;
-
-
-//bool:
-//    FALSE | TRUE;
-//
-//integer:
-//	DECIMAL_LIT;
-//
-//float:
-//    FLOAT_LIT;
-//string_: RAW_STRING_LIT | INTERPRETED_STRING_LIT;
-
-//operandName: IDENTIFIER;
-
-//qualifiedIdent: IDENTIFIER DOT IDENTIFIER;
-
-//compositeLit: literalType literalValue;
-//compositeLit: arrayType literalValue;
-
-//TIPOS LITERAIS
-//literalType:
-//	structType
-//	arrayType
-//	| sliceType
-//	| mapType
-//	| typeName;
-
-//literalValue: L_CURLY (elementList COMMA?)? R_CURLY;
-
-//elementList: keyedElement (COMMA keyedElement)*;
-
-//keyedElement: (key COLON)? element;
-
-//key: expression | literalValue;
-
-//element: expression | literalValue;
-
-//TIPO STRUCT
-//structType: STRUCT L_CURLY (fieldDecl eos)* R_CURLY;
-
-//fieldDecl: (
-//		{noTerminatorBetween(2)}? identifierList type_
-//		| embeddedField
-//	) tag = string_?;
-//fieldDecl: (
-//		identifierList type_
-//		| embeddedField
-//	) tag = string_?;
-
-
-//embeddedField: TIMES? typeName;
-
-functionLit: IDENTIFIER parameters ; // func() call()
+functionLit: IDENTIFIER arguments ; // func() call()
 
 index: L_BRACKET expression R_BRACKET;
-
-//slice_:
-//	L_BRACKET (
-//		expression? COLON expression?
-//		| expression? COLON expression COLON expression
-//	) R_BRACKET;
-
-//typeAssertion: DOT L_PAREN type_ R_PAREN;
 
 arguments:
 	L_PAREN (
 		(expressionList | (COMMA expressionList)?) COMMA?
-//		(expressionList | nonNamedType (COMMA expressionList)?) COMMA?
 	)? R_PAREN;
 
 //methodExpr: nonNamedType DOT IDENTIFIER;
