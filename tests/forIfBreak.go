@@ -7,11 +7,6 @@ func ForeachStmts() {
 	nums[0] = 2
 	nums[1] = 3
 	nums[2] = 4
-	var sum, i int = 0, 0
-	for i; i < 3; i++ {
-		sum += nums[i]
-	}
-	fmt.Println("sum:", sum)
 
 	// `range` on arrays and slices provides both the
 	// index and value for each entry. Above we didn't
@@ -21,6 +16,7 @@ func ForeachStmts() {
 	for i = 0; i < 3; i++ {
 		if nums[i] == 3 {
 			fmt.Println("index:", i)
+			break
 		}
 	}
 

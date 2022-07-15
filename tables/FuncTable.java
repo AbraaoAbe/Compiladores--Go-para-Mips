@@ -21,8 +21,15 @@ public class FuncTable {
 		return -1;
 	}
 	
-	public int addFunc(String s, int line, Type type) {
-		Entry entry = new Entry(s, line, type);
+//	public int addFunc(String s, int line, Type type) {
+//		Entry entry = new Entry(s, line, type);
+//		int idxAdded = table.size();
+//		table.add(entry);
+//		return idxAdded;
+//	}
+
+	public int addFunc(String s, int line, List<Type> param, Type retorno, VarTable vt) {
+		Entry entry = new Entry(s, line, param, retorno, vt);
 		int idxAdded = table.size();
 		table.add(entry);
 		return idxAdded;
@@ -55,16 +62,43 @@ public class FuncTable {
 		f.close();
 		return sb.toString();
 	}
-	
-	private static final class Entry {
-		private final String name;
-		private final int line;
-		private Type type;
-		
-		Entry(String name, int line, Type type) {
+
+	public List<Entry> getTable() {
+		return table;
+	}
+
+	public List<Type> getTypes(int i) {
+		return table.get(i).param;
+	}
+
+	public String getTypesString(int i) {
+		String prms = "";
+		for(Type t: table.get(i).param) {
+			prms += t.toString() + " ";
+		}
+		return prms;
+
+	}
+
+	public VarTable getVarTable(int i) {
+		return table.get(i).vt;
+	}
+
+
+	private final class Entry {
+		String name;
+		int line;
+		List<Type> param = new ArrayList<Type>();
+		Type type;
+		VarTable vt = new VarTable();
+
+		Entry(String name, int line, List<Type> param, Type retorno, VarTable vt) {
 			this.name = name;
 			this.line = line;
-			this.type = type;
+			this.param = param;
+			this.type = retorno;
+			this.vt = vt;
 		}
+
 	}
 }
