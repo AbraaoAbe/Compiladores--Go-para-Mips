@@ -122,7 +122,7 @@ public class SemanticChecker extends GoParserBaseVisitor<AST> {
         	System.exit(1);
             return null; // Never reached.
         }
-        idx = vt.addVar(text, line, NO_TYPE, 0);
+        idx = vt.addVar(text, line, NO_TYPE, -1);
         return new AST(VAR_DECL_NODE, idx, NO_TYPE);
     }
 
@@ -391,6 +391,8 @@ public class SemanticChecker extends GoParserBaseVisitor<AST> {
 			//vartable
 			vt.setType(child.intData, lastDeclType);
 			vt.setTamArr(child.intData, tamArray);
+
+			tamArray = -1;
     	}
     	
     	return idList;
@@ -414,7 +416,7 @@ public class SemanticChecker extends GoParserBaseVisitor<AST> {
     @Override
     public AST visitBoolType(GoParser.BoolTypeContext ctx) {
     	this.lastDeclType = Type.BOOL_TYPE;
-		this.tamArray = 0;
+		this.tamArray = -1;
     	// Não tem problema retornar null aqui porque o método chamador
     	// ignora o valor de retorno.
     	return null;
@@ -424,7 +426,7 @@ public class SemanticChecker extends GoParserBaseVisitor<AST> {
 	@Override
 	public AST visitIntType(GoParser.IntTypeContext ctx) {
 		this.lastDeclType = Type.INT_TYPE;
-		this.tamArray = 0;
+		this.tamArray = -1;
 		// Não tem problema retornar null aqui porque o método chamador
     	// ignora o valor de retorno.
 		return null;
@@ -433,7 +435,7 @@ public class SemanticChecker extends GoParserBaseVisitor<AST> {
 	@Override
 	public AST visitStringType(GoParser.StringTypeContext ctx){
 		this.lastDeclType = Type.STRING_TYPE;
-		this.tamArray = 0;
+		this.tamArray = -1;
 //
 //		this.st.add(ctx.string_().getStop().getText());
 
@@ -444,7 +446,7 @@ public class SemanticChecker extends GoParserBaseVisitor<AST> {
 	@Override
 	public AST visitFloatType(GoParser.FloatTypeContext ctx) {
 		this.lastDeclType = Type.FLOAT_TYPE;
-		this.tamArray = 0;
+		this.tamArray = -1;
 		// Não tem problema retornar null aqui porque o método chamador
     	// ignora o valor de retorno.
 		return null;
@@ -475,12 +477,16 @@ public class SemanticChecker extends GoParserBaseVisitor<AST> {
 
 	// Visita a regra assignment: IDENTIFIER index? ASSIGN expression;
 	@Override
-	public AST visitAssignment(AssignmentContext ctx) {
+	public AST visitAssignment(GoParser.AssignmentContext ctx) {
 		// Visita a expressão da direita.
 		AST exprNode = visit(ctx.expression());
 		// Visita o identificador da esquerda.
 		Token idToken = ctx.IDENTIFIER().getSymbol();
 		AST idNode = checkVar(idToken);
+		if (ctx.index() != null) {
+			idNode.sizeData = Integer.parseInt(ctx.index().DECIMAL_LIT().getText());
+		}
+
 		// Faz as verificações de tipos.
 		return checkAssign(idToken.getLine(), idNode, exprNode);
 	}

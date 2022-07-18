@@ -40,12 +40,12 @@ public class AST {
 
 	// Cria o nó com um dado inteiro.
 	public AST(NodeKind kind, int intData, Type type) {
-		this(kind, intData, 0.0f, 0, type);
+		this(kind, intData, 0.0f, -1, type);
 	}
 
 	// Cria o nó com um dado float.
 	public AST(NodeKind kind, float floatData, Type type) {
-		this(kind, 0, floatData, 0, type);
+		this(kind, 0, floatData, -1, type);
 	}
 
 	// Adiciona um novo filho ao nó.
@@ -139,7 +139,11 @@ public class AST {
 			pw.printf("(%s) ", this.type.toString());
 		}
 		if (this.kind == NodeKind.VAR_DECL_NODE || this.kind == NodeKind.VAR_USE_NODE) {
-			pw.printf("%s@", vt.getName(this.intData));
+			if (this.sizeData >= 0){
+				pw.printf("%s[%d]@", vt.getName(this.intData), this.sizeData);
+			} else {
+				pw.printf("%s@",  vt.getName(this.intData));
+			}
 		}
 		else {
 			pw.printf("%s", this.kind.toString());
@@ -152,11 +156,7 @@ public class AST {
 			} else if (this.kind == NodeKind.BOOL_VAL_NODE){
 				pw.printf("%b", this.intData);
 			} else {
-				if (this.sizeData != 0){
-					pw.printf("%d [%d]", this.intData, this.sizeData);
-				} else {
-					pw.printf("%d", this.intData);
-				}
+				pw.printf("%d", this.intData);
 			}
 		}
 		pw.printf("\"];\n");

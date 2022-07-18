@@ -57,7 +57,7 @@ public final class VarTable {
 		Formatter f = new Formatter(sb);
 		f.format("Variables table:\n");
 		for (int i = 0; i < table.size(); i++) {
-			if (getTamArr(i) == 0) {
+			if (getTamArr(i) == -1) {
 				f.format("Entry %d -- name: %s, line: %d, type: %s\n", i,
 						getName(i), getLine(i), getType(i).toString());
 			} else{
