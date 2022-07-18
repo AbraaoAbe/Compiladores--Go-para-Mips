@@ -7,6 +7,7 @@ import static typing.Type.INT_TYPE;
 import static typing.Type.NO_TYPE;
 import static typing.Type.FLOAT_TYPE;
 import static typing.Type.STRING_TYPE;
+import static typing.Type.ARRAY_TYPE;
 
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.TerminalNode;
@@ -91,7 +92,7 @@ public class SemanticChecker extends GoParserBaseVisitor<AST> {
 	private FuncTable ft = new FuncTable();
 
     Type lastDeclType;  // Variável "global" com o último tipo declarado.
-
+	int tamArray;
     AST root; // Nó raiz da AST sendo construída.
 
     // Testa se o dado token foi declarado antes.
@@ -121,7 +122,7 @@ public class SemanticChecker extends GoParserBaseVisitor<AST> {
         	System.exit(1);
             return null; // Never reached.
         }
-        idx = vt.addVar(text, line, NO_TYPE);
+        idx = vt.addVar(text, line, NO_TYPE, 0);
         return new AST(VAR_DECL_NODE, idx, NO_TYPE);
     }
 
@@ -220,8 +221,12 @@ public class SemanticChecker extends GoParserBaseVisitor<AST> {
     }
 
     // Exibe a AST no formato DOT em stderr.
-    void printAST() {
-    	AST.printDot(root, vt);
+    void printAST(String type) {
+		if( type == "console"){
+			AST.printDot(root, vt);
+		} else{
+			AST.printFileDot(root, vt);
+		}
     }
 
     // ----------------------------------------------------------------------------
@@ -262,8 +267,6 @@ public class SemanticChecker extends GoParserBaseVisitor<AST> {
 	public AST visitFunctionDecl(FunctionDeclContext ctx) {
 
 
-
-
 		AST func = newFunc(ctx.IDENTIFIER().getSymbol()); // Precisa pegar o tipo da funcao
 
 		AST sig = visit(ctx.signature());
@@ -275,6 +278,7 @@ public class SemanticChecker extends GoParserBaseVisitor<AST> {
 
 
 		return func;
+	}
 //
 //	}
 //	//	signature:
@@ -380,8 +384,13 @@ public class SemanticChecker extends GoParserBaseVisitor<AST> {
 			AST child = idList.children.get(i);
 			//set type 
 			child.type = lastDeclType;
+			if (tamArray != 0){
+				child.sizeData = tamArray;
+			}
+
 			//vartable
 			vt.setType(child.intData, lastDeclType);
+			vt.setTamArr(child.intData, tamArray);
     	}
     	
     	return idList;
@@ -405,6 +414,7 @@ public class SemanticChecker extends GoParserBaseVisitor<AST> {
     @Override
     public AST visitBoolType(GoParser.BoolTypeContext ctx) {
     	this.lastDeclType = Type.BOOL_TYPE;
+		this.tamArray = 0;
     	// Não tem problema retornar null aqui porque o método chamador
     	// ignora o valor de retorno.
     	return null;
@@ -414,6 +424,7 @@ public class SemanticChecker extends GoParserBaseVisitor<AST> {
 	@Override
 	public AST visitIntType(GoParser.IntTypeContext ctx) {
 		this.lastDeclType = Type.INT_TYPE;
+		this.tamArray = 0;
 		// Não tem problema retornar null aqui porque o método chamador
     	// ignora o valor de retorno.
 		return null;
@@ -422,6 +433,7 @@ public class SemanticChecker extends GoParserBaseVisitor<AST> {
 	@Override
 	public AST visitStringType(GoParser.StringTypeContext ctx){
 		this.lastDeclType = Type.STRING_TYPE;
+		this.tamArray = 0;
 //
 //		this.st.add(ctx.string_().getStop().getText());
 
@@ -432,6 +444,7 @@ public class SemanticChecker extends GoParserBaseVisitor<AST> {
 	@Override
 	public AST visitFloatType(GoParser.FloatTypeContext ctx) {
 		this.lastDeclType = Type.FLOAT_TYPE;
+		this.tamArray = 0;
 		// Não tem problema retornar null aqui porque o método chamador
     	// ignora o valor de retorno.
 		return null;
@@ -440,7 +453,23 @@ public class SemanticChecker extends GoParserBaseVisitor<AST> {
 	//!MUDAR ARRAY TYPE
 	@Override
 	public AST visitArrayType(GoParser.ArrayTypeContext ctx){
-		this.lastDeclType = Type.ARRAY_TYPE;
+//		visit(ctx.typeName()); // define type array
+
+//		this.lastDeclType = Type.ARRAY_TYPE;
+		this.tamArray = Integer.parseInt(ctx.arrayLength().getText());
+//		this.tamArray = 111;
+		Type arrt;
+		int type = ctx.typeName().getStop().getType();
+		if (type == GoLexer.INT){
+			arrt = INT_TYPE;
+		} else if (type == GoLexer.FLOAT){
+			arrt = FLOAT_TYPE;
+		} else if (type == GoLexer.STRING){
+			arrt = STRING_TYPE;
+		} else{
+			arrt = BOOL_TYPE;
+		}
+		this.lastDeclType = arrt;
     	return null; // Java says must return something even when Void
 	}
 

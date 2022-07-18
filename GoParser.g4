@@ -182,11 +182,16 @@ forClause:
 
 type_: typeName | arrayType;
 
+arrayType: L_BRACKET arrayLength R_BRACKET typeName;
+
+arrayLength: DECIMAL_LIT;
+
 typeName: INT #intType
 		| FLOAT #floatType
 		| STRING #stringType
 		| BOOL #boolType
-		; 
+		;
+
 
 
 //typeLit:
@@ -195,16 +200,6 @@ typeName: INT #intType
 //	| functionType;
 //	| sliceType;
 //	| mapType;
-
-arrayType: L_BRACKET arrayLength R_BRACKET elementType;
-
-arrayLength: expression;
-
-elementType: type_;
-
-//sliceType: L_BRACKET R_BRACKET elementType;
-
-//mapType: MAP L_BRACKET type_ R_BRACKET elementType;
 
 methodSpec:
 //	IDENTIFIER parameters result
@@ -244,18 +239,17 @@ expression:
 	| expression LOGICAL_AND expression # relAnd
 	| expression LOGICAL_OR expression #relOr
 	| L_PAREN expression R_PAREN	# exprPar
-	| IDENTIFIER					# exprId
 	| DECIMAL_LIT   				#integerLit
 	| str_v = (RAW_STRING_LIT | INTERPRETED_STRING_LIT)   #stringLit
 	| FLOAT_LIT        				#floatLit
 	| bool_v = (FALSE | TRUE) 		#boolLit
-	| arrayType						#arrayLitval 
 	| functionLit					#functionLitval
+	| IDENTIFIER					# exprId
 	;
 
 functionLit: IDENTIFIER arguments ; // func() call()
 
-index: L_BRACKET expression R_BRACKET;
+index: L_BRACKET DECIMAL_LIT R_BRACKET;
 
 arguments:
 	L_PAREN (
