@@ -1,15 +1,9 @@
 package typing;
 
 
-import static typing.Conv.B2I;
-import static typing.Conv.B2R;
-import static typing.Conv.B2S;
-import static typing.Conv.I2R;
-import static typing.Conv.I2S;
-import static typing.Conv.NONE;
-import static typing.Conv.R2S;
-
 import typing.Conv.Unif;
+
+import static typing.Conv.*;
 
 
 // Create enum for primitive types
@@ -78,5 +72,16 @@ public enum Type {
 
     public Unif unifyComp(Type that) {
         return comp[this.ordinal()][that.ordinal()];
+    }
+
+    private static Unif index[][] = {
+            { new Unif(INT_TYPE, NONE, NONE), new Unif(INT_TYPE, NONE, R2I),  new Unif(NO_TYPE, NONE, NONE), new Unif(NO_TYPE, NONE, NONE) }, // Int
+            { new Unif(INT_TYPE, R2I, NONE), new Unif(NO_TYPE, NONE, NONE), new Unif(NO_TYPE, NONE, NONE), new Unif(NO_TYPE, NONE, NONE) },  // Float
+            { new Unif(NO_TYPE, NONE, NONE),  new Unif(NO_TYPE, NONE, NONE),   new Unif(NO_TYPE, NONE, NONE), new Unif(NO_TYPE, NONE, NONE) }, // String
+            { new Unif(NO_TYPE, NONE, NONE),  new Unif(NO_TYPE, NONE, NONE),   new Unif(NO_TYPE, NONE, NONE), new Unif(NO_TYPE, NONE, NONE) } // Bool
+    };
+
+    public Unif unifyIndexArith(Type that) {
+        return index[this.ordinal()][that.ordinal()];
     }
 }

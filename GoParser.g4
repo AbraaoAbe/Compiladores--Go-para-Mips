@@ -249,7 +249,8 @@ expression:
 
 functionLit: IDENTIFIER arguments ; // func() call()
 
-index: L_BRACKET DECIMAL_LIT R_BRACKET;
+//index: L_BRACKET DECIMAL_LIT R_BRACKET;
+index: L_BRACKET expression R_BRACKET;
 
 arguments:
 	L_PAREN (

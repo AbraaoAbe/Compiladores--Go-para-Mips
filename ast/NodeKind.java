@@ -167,6 +167,11 @@ public enum NodeKind {
             return "R2S";
         }
 	},
+    R2I_NODE {
+        public String toString() {
+            return "R2I";
+        }
+    },
     PRINT_NODE {
         public String toString() {
             return "print";

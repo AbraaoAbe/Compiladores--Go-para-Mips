@@ -1,13 +1,8 @@
 package typing;
 
-import static ast.NodeKind.B2I_NODE;
-import static ast.NodeKind.B2R_NODE;
-import static ast.NodeKind.B2S_NODE;
-import static ast.NodeKind.I2R_NODE;
-import static ast.NodeKind.I2S_NODE;
-import static ast.NodeKind.R2S_NODE;
-
 import ast.AST;
+
+import static ast.NodeKind.*;
 
 public enum Conv {
 	B2I,  // Bool to Int
@@ -16,6 +11,7 @@ public enum Conv {
     I2R,  // Int to Float
     I2S,  // Int to String
     R2S,  // Float to String
+	R2I,  // Float to Int
     NONE; // No type conversion
     
 	// Cria e retorna um novo nó de conversão da AST segundo o parâmetro 'conv' passado.
@@ -30,6 +26,7 @@ public enum Conv {
 	        case I2R:  return AST.newSubtree(I2R_NODE, Type.FLOAT_TYPE, n);
 	        case I2S:  return AST.newSubtree(I2S_NODE, Type.STRING_TYPE, n);
 	        case R2S:  return AST.newSubtree(R2S_NODE, Type.STRING_TYPE, n);
+			case R2I:  return AST.newSubtree(R2I_NODE, Type.INT_TYPE, n);
 	        case NONE: return n;
 	        default:
 	            System.err.printf("INTERNAL ERROR: invalid conversion of types!\n");

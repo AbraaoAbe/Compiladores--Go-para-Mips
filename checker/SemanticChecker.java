@@ -2,6 +2,7 @@ package checker;
 
 import static ast.NodeKind.*;
 import static typing.Conv.I2R;
+import static typing.Conv.NONE;
 import static typing.Type.BOOL_TYPE;
 import static typing.Type.INT_TYPE;
 import static typing.Type.NO_TYPE;
@@ -128,6 +129,24 @@ public class SemanticChecker extends GoParserBaseVisitor<AST> {
         idx = vt.addVar(text, line, NO_TYPE, -1);
         return new AST(VAR_DECL_NODE, idx, NO_TYPE);
     }
+
+	AST checkIndex(AST finalIndex, int line){
+
+		// Faz a unificação dos tipos para determinar o tipo resultante.
+		Type lt = INT_TYPE;
+		Type rt = finalIndex.type;
+		Unif unif = lt.unifyIndexArith(rt);
+
+		if (unif.type == NO_TYPE) {
+			typeError(line, "[]", lt, rt);
+		}
+
+		// Cria os nós de conversão que forem necessários segundo a
+		// estrutura de conversão.
+		finalIndex = Conv.createConvNode(unif.rc, finalIndex);
+
+		return finalIndex;
+	}
 
 	// Testa se o dado token foi declarado antes.
     // Se sim, cria e retorna um nó de 'var use'.
@@ -295,69 +314,69 @@ public class SemanticChecker extends GoParserBaseVisitor<AST> {
 	}
 
 	//visita a regra functionDecl: FUNC IDENTIFIER (signature block?);
-	@Override
-	public AST visitFunctionDecl(FunctionDeclContext ctx) {
-
-
-		AST func = newFunc(ctx.IDENTIFIER().getSymbol()); // Precisa pegar o tipo da funcao
-
-		int idx = func.getIntData();
-		localvt = ft.getVarTable(idx); // Set localvt
-
-		AST params = visit(ctx.signature()); // visit return type
-		func.addChild(params);
-
-		// Set type for node and func table
-		func.setType(lastDeclType);
-		ft.setRetorno(idx, lastDeclType);
-
-		// Backup the global vartable
-		VarTable backup = vt;
-		vt = localvt;
-		// Now all the variables created will be inserted on localvt
-		AST block = visit(ctx.block());
-		func.addChild(block);
-
-		// Come back to global vartable;
-		vt = backup;
-
-		return func;
-	}
-
-	//	signature:
-	//	parameters type_?;
-	public AST visitSignature(GoParser.SignatureContext  ctx){
-		AST params = visit(ctx.parameters());
-
-		if (ctx.type_() != null){
-			visit(ctx.type_());
-		} else{
-			lastDeclType = NO_TYPE;
-		}
-		return params;
-	}
-
-	@Override
-	public AST visitParameters(GoParser.ParametersContext ctx) {
-
-		AST params_list = AST.newSubtree(PARAMS_LIST_NODE, NO_TYPE);
-		int size = ctx.parameterDecl().size();
-		params_list = new List<Type>(size);
-		for (int i = 0; i < size; i++) {
-			AST node = visit(ctx.parameterDecl(i)); // Precisa pegar o tipo da variável
-			params_list.addChild(node);
-		}
-		return params_list;
-	}
-
-	@Override
-	public AST visitParameterDecl(ParameterDeclContext ctx) {
-
-		AST node = newLocalVar(ctx.IDENTIFIER().getSymbol());
-		visit(ctx.type_());
-		node.setType(lastDeclType);
-		return node;
-	}
+//	@Override
+//	public AST visitFunctionDecl(FunctionDeclContext ctx) {
+//
+//
+//		AST func = newFunc(ctx.IDENTIFIER().getSymbol()); // Precisa pegar o tipo da funcao
+//
+//		int idx = func.getIntData();
+//		localvt = ft.getVarTable(idx); // Set localvt
+//
+//		AST params = visit(ctx.signature()); // visit return type
+//		func.addChild(params);
+//
+//		// Set type for node and func table
+//		func.setType(lastDeclType);
+//		ft.setRetorno(idx, lastDeclType);
+//
+//		// Backup the global vartable
+//		VarTable backup = vt;
+//		vt = localvt;
+//		// Now all the variables created will be inserted on localvt
+//		AST block = visit(ctx.block());
+//		func.addChild(block);
+//
+//		// Come back to global vartable;
+//		vt = backup;
+//
+//		return func;
+//	}
+//
+//	//	signature:
+//	//	parameters type_?;
+//	public AST visitSignature(GoParser.SignatureContext  ctx){
+//		AST params = visit(ctx.parameters());
+//
+//		if (ctx.type_() != null){
+//			visit(ctx.type_());
+//		} else{
+//			lastDeclType = NO_TYPE;
+//		}
+//		return params;
+//	}
+//
+//	@Override
+//	public AST visitParameters(GoParser.ParametersContext ctx) {
+//
+//		AST params_list = AST.newSubtree(PARAMS_LIST_NODE, NO_TYPE);
+//		int size = ctx.parameterDecl().size();
+////		params_list = new List<Type>(size);
+//		for (int i = 0; i < size; i++) {
+//			AST node = visit(ctx.parameterDecl(i)); // Precisa pegar o tipo da variável
+//			params_list.addChild(node);
+//		}
+//		return params_list;
+//	}
+//
+//	@Override
+//	public AST visitParameterDecl(ParameterDeclContext ctx) {
+//
+//		AST node = newLocalVar(ctx.IDENTIFIER().getSymbol());
+//		visit(ctx.type_());
+//		node.setType(lastDeclType);
+//		return node;
+//	}
 
 	/*
 	//visita a regra block: L_CURLY statementList R_CURLY;
@@ -547,14 +566,23 @@ public class SemanticChecker extends GoParserBaseVisitor<AST> {
 		Token idToken = ctx.IDENTIFIER().getSymbol();
 		AST idNode = checkVar(idToken);
 		if (ctx.index() != null) {
-			idNode.sizeData = Integer.parseInt(ctx.index().DECIMAL_LIT().getText());
+//			idNode.sizeData = Integer.parseInt(ctx.index().DECIMAL_LIT().getText());
+			AST index_node = visit(ctx.index());
+			idNode.addChild(checkIndex(index_node, ctx.getStop().getLine()));
+//			AST some =
+
 		}
 
 		// Faz as verificações de tipos.
 		return checkAssign(idToken.getLine(), idNode, exprNode);
 	}
 
-    // Visita a regra typeDecl: type_spec ID SEMI
+	@Override
+	public AST visitIndex(GoParser.IndexContext ctx) {
+		return visit(ctx.expression());
+	}
+
+	// Visita a regra typeDecl: type_spec ID SEMI
     // @Override
     // public AST visitTypeDecl(GoParser.TypeDeclContext ctx) {
     // 	// Visita a definição do tipo da variável.
