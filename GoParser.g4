@@ -59,7 +59,6 @@ functionDecl: FUNC IDENTIFIER (signature block?);
 //
 //receiver: parameters;
 
-//TIPO VAR (DEIXA OU TIRA?)
 //varDecl: VAR (varSpec | L_PAREN (varSpec eos)* R_PAREN);
 
 varDecl: VAR varSpec;
@@ -182,11 +181,16 @@ forClause:
 
 type_: typeName | arrayType;
 
+arrayType: L_BRACKET arrayLength R_BRACKET typeName;
+
+arrayLength: DECIMAL_LIT;
+
 typeName: INT #intType
 		| FLOAT #floatType
 		| STRING #stringType
 		| BOOL #boolType
-		; 
+		;
+
 
 
 //typeLit:
@@ -195,16 +199,6 @@ typeName: INT #intType
 //	| functionType;
 //	| sliceType;
 //	| mapType;
-
-arrayType: L_BRACKET arrayLength R_BRACKET elementType;
-
-arrayLength: expression;
-
-elementType: type_;
-
-//sliceType: L_BRACKET R_BRACKET elementType;
-
-//mapType: MAP L_BRACKET type_ R_BRACKET elementType;
 
 methodSpec:
 //	IDENTIFIER parameters result
@@ -216,8 +210,13 @@ functionType: FUNC signature;
 // fmt.Println()
 // fmt.Scan()
 
+//chamada de funcao
+functionCaller: IDENTIFIER paramsCaller;
+
+//parametros da chamada de funcao
+paramsCaller: L_PAREN (IDENTIFIER (COMMA IDENTIFIER)* COMMA?)? R_PAREN;
+
 signature:
-//	parameters result
 	parameters type_?;
     // os parâmetros da função mais o tipo do retorno, caso não tenho tipo do retorn a função não retorna nada
 //result: parameters | type_;
@@ -245,108 +244,22 @@ expression:
 	| expression LOGICAL_AND expression # relAnd
 	| expression LOGICAL_OR expression #relOr
 	| L_PAREN expression R_PAREN	# exprPar
-	| IDENTIFIER					# exprId
 	| DECIMAL_LIT   				#integerLit
 	| str_v = (RAW_STRING_LIT | INTERPRETED_STRING_LIT)   #stringLit
 	| FLOAT_LIT        				#floatLit
 	| bool_v = (FALSE | TRUE) 		#boolLit
-	| arrayType						#arrayLitval 
-	| functionLit					#functionLitval
-	; 
+//	| functionLit					#functionLitval
+	| functionCaller                #funcCaller
+	| IDENTIFIER					#exprId
+	;
 
-//primaryExpr:
-//	operand
-//	| primaryExpr ( index | arguments
-//	| conversion
-//	| methodExpr
-//	| primaryExpr ((DOT IDENTIFIER) | index | arguments
-//		| slice_
-//		| typeAssertion
-//	);
+//functionLit: IDENTIFIER arguments ; // func() call()
 
-
-//conversion: nonNamedType L_PAREN expression COMMA? R_PAREN;
-//
-//nonNamedType: typeLit | L_PAREN nonNamedType R_PAREN;
-
-//operand: literal | IDENTIFIER | L_PAREN expression R_PAREN;
-
-//literal: basicLit | compositeLit | functionLit;
-
-//basicLit:
-//	NIL_LIT     #nullType
-//	DECIMAL_LIT   	#integerLit
-//	| str_v = (RAW_STRING_LIT | INTERPRETED_STRING_LIT)   #stringLit
-//	| FLOAT_LIT        #floatLit
-//	| bool_v = (FALSE | TRUE) 		#boolLit;
-
-
-//bool:
-//    FALSE | TRUE;
-//
-//integer:
-//	DECIMAL_LIT;
-//
-//float:
-//    FLOAT_LIT;
-//string_: RAW_STRING_LIT | INTERPRETED_STRING_LIT;
-
-//operandName: IDENTIFIER;
-
-//qualifiedIdent: IDENTIFIER DOT IDENTIFIER;
-
-//compositeLit: literalType literalValue;
-//compositeLit: arrayType literalValue;
-
-//TIPOS LITERAIS
-//literalType:
-//	structType
-//	arrayType
-//	| sliceType
-//	| mapType
-//	| typeName;
-
-//literalValue: L_CURLY (elementList COMMA?)? R_CURLY;
-
-//elementList: keyedElement (COMMA keyedElement)*;
-
-//keyedElement: (key COLON)? element;
-
-//key: expression | literalValue;
-
-//element: expression | literalValue;
-
-//TIPO STRUCT
-//structType: STRUCT L_CURLY (fieldDecl eos)* R_CURLY;
-
-//fieldDecl: (
-//		{noTerminatorBetween(2)}? identifierList type_
-//		| embeddedField
-//	) tag = string_?;
-//fieldDecl: (
-//		identifierList type_
-//		| embeddedField
-//	) tag = string_?;
-
-
-//embeddedField: TIMES? typeName;
-
-functionLit: IDENTIFIER parameters ; // func() call()
-
-index: L_BRACKET expression R_BRACKET;
-
-//slice_:
-//	L_BRACKET (
-//		expression? COLON expression?
-//		| expression? COLON expression COLON expression
-//	) R_BRACKET;
-
-//typeAssertion: DOT L_PAREN type_ R_PAREN;
+index: L_BRACKET DECIMAL_LIT R_BRACKET;
 
 arguments:
 	L_PAREN (
 		(expressionList | (COMMA expressionList)?) COMMA?
-//		(expressionList | nonNamedType (COMMA expressionList)?) COMMA?
 	)? R_PAREN;
 
 //methodExpr: nonNamedType DOT IDENTIFIER;

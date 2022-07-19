@@ -7,7 +7,9 @@ import static typing.Type.INT_TYPE;
 import static typing.Type.NO_TYPE;
 import static typing.Type.FLOAT_TYPE;
 import static typing.Type.STRING_TYPE;
+import static typing.Type.ARRAY_TYPE;
 
+import com.sun.jdi.LocalVariable;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
@@ -17,7 +19,7 @@ import parser.GoLexer;
 import parser.GoParser;
 import parser.GoParser.SourceFileContext;
 import parser.GoParser.FunctionDeclContext;
-import parser.GoParser.FunctionLitvalContext;
+//import parser.GoParser.FunctionLitvalContext;
 import parser.GoParser.BlockContext;
 import parser.GoParser.StatementListContext;
 import parser.GoParser.AssignmentContext;
@@ -57,6 +59,8 @@ import typing.Conv;
 import typing.Conv.Unif;
 import typing.Type;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 /*
@@ -87,9 +91,11 @@ public class SemanticChecker extends GoParserBaseVisitor<AST> {
 	private StrTable st = new StrTable();   // Tabela de strings.
     private VarTable vt = new VarTable();   // Tabela de variáveis.
 	private FuncTable ft = new FuncTable();
+	private VarTable localvt;
+	private List<Type> list_params;
 
     Type lastDeclType;  // Variável "global" com o último tipo declarado.
-
+	int tamArray;
     AST root; // Nó raiz da AST sendo construída.
 
     // Testa se o dado token foi declarado antes.
@@ -119,7 +125,7 @@ public class SemanticChecker extends GoParserBaseVisitor<AST> {
         	System.exit(1);
             return null; // Never reached.
         }
-        idx = vt.addVar(text, line, NO_TYPE);
+        idx = vt.addVar(text, line, NO_TYPE, -1);
         return new AST(VAR_DECL_NODE, idx, NO_TYPE);
     }
 
@@ -135,7 +141,7 @@ public class SemanticChecker extends GoParserBaseVisitor<AST> {
     		System.exit(1);
             return null; // Never reached.
         }
-    	return new AST(FUNC_USE_NODE, idx, ft.getType(idx));
+    	return new AST(FUNC_USE_NODE, idx, ft.getRetorno(idx));
     }
 
     // Cria uma nova variável a partir do dado token.
@@ -150,9 +156,71 @@ public class SemanticChecker extends GoParserBaseVisitor<AST> {
         	System.exit(1);
             return null; // Never reached.
         }
-        idx = ft.addFunc(text, line, NO_TYPE);
+        idx = ft.addFunc(text, line, null, NO_TYPE, null);
         return new AST(FUNC_DECL_NODE, idx, NO_TYPE);
     }
+
+	void newFunc(GoParser.FunctionDeclContext ctx) {
+		String text = ctx.getChild(1).getText();
+		int line = ctx.IDENTIFIER().getSymbol().getLine();
+		int idx = ft.lookupFunc(text);
+		if (idx != -1) {
+			System.err.printf(
+					"SEMANTIC ERROR (%d): function '%s' already declared at line %d.\n",
+					line, text, ft.getLine(idx));
+			System.exit(1);
+//			return null;
+
+		}
+		// Cria a lista de param
+		List<Type> param = new ArrayList<Type>();
+
+		List<GoParser.ParameterDeclContext> parameterDeclContext = ctx.signature().parameters().parameterDecl();
+		int tam = parameterDeclContext.size();
+
+		for(int i = 0; i < tam; i++) {
+//			String tipo = parameterDeclContext.get(i).type_().typeName().IDENTIFIER().getSymbol().getText();
+//			setLastDeclType(tipo);
+			visit(parameterDeclContext.get(i).type_());
+			param.add(lastDeclType);
+		}
+
+
+		//cria list retorno
+		visit(ctx.signature().type_());
+		Type returns = lastDeclType;
+		ft.addFunc(text, line, param, returns, new VarTable());
+
+	}
+
+	AST checkLocalVar(Token token) {
+		String text = token.getText();
+		int line = token.getLine();
+		int idx = localvt.lookupVar(text);
+		if (idx == -1) {
+			System.err.printf("SEMANTIC ERROR (%d): variable '%s' was not declared.\n", line, text);
+			// A partir de agora vou abortar no primeiro erro para facilitar.
+			System.exit(1);
+			return null; // Never reached.
+		}
+		return new AST(VAR_USE_NODE, idx, localvt.getType(idx));
+	}
+
+	// Cria uma nova variável a partir do dado token.
+	// Retorna um nó do tipo 'var declaration'.
+	AST newLocalVar(Token token) {
+		String text = token.getText();
+		int line = token.getLine();
+		int idx = localvt.lookupVar(text);
+		if (idx != -1) {
+			System.err.printf("SEMANTIC ERROR (%d): variable '%s' already declared at line %d.\n", line, text, vt.getLine(idx));
+			// A partir de agora vou abortar no primeiro erro para facilitar.
+			System.exit(1);
+			return null; // Never reached.
+		}
+		idx = localvt.addVar(text, line, NO_TYPE, -1);
+		return new AST(VAR_DECL_NODE, idx, NO_TYPE);
+	}
 
     // ----------------------------------------------------------------------------
     // Type checking and inference.
@@ -185,8 +253,12 @@ public class SemanticChecker extends GoParserBaseVisitor<AST> {
     }
 
     // Exibe a AST no formato DOT em stderr.
-    void printAST() {
-    	AST.printDot(root, vt);
+    void printAST(String type) {
+		if( type == "console"){
+			AST.printDot(root, vt);
+		} else{
+			AST.printFileDot(root, vt);
+		}
     }
 
     // ----------------------------------------------------------------------------
@@ -225,25 +297,70 @@ public class SemanticChecker extends GoParserBaseVisitor<AST> {
 	//visita a regra functionDecl: FUNC IDENTIFIER (signature block?);
 	@Override
 	public AST visitFunctionDecl(FunctionDeclContext ctx) {
-    	
 
-		
-    	
+
 		AST func = newFunc(ctx.IDENTIFIER().getSymbol()); // Precisa pegar o tipo da funcao
 
-		AST sig = visit(ctx.signature());
+		int idx = func.getIntData();
+		localvt = ft.getVarTable(idx); // Set localvt
 
+		AST params = visit(ctx.signature()); // visit return type
+		func.addChild(params);
+
+		// Set type for node and func table
+		func.setType(lastDeclType);
+		ft.setRetorno(idx, lastDeclType);
+
+		// Backup the global vartable
+		VarTable backup = vt;
+		vt = localvt;
+		// Now all the variables created will be inserted on localvt
 		AST block = visit(ctx.block());
-
-		//func.addChild(sig);
 		func.addChild(block);
-		
+
+		// Come back to global vartable;
+		vt = backup;
 
 		return func;
-	
 	}
 
-	/* 
+	//	signature:
+	//	parameters type_?;
+	public AST visitSignature(GoParser.SignatureContext  ctx){
+		AST params = visit(ctx.parameters());
+
+		if (ctx.type_() != null){
+			visit(ctx.type_());
+		} else{
+			lastDeclType = NO_TYPE;
+		}
+		return params;
+	}
+
+	@Override
+	public AST visitParameters(GoParser.ParametersContext ctx) {
+
+		AST params_list = AST.newSubtree(PARAMS_LIST_NODE, NO_TYPE);
+		int size = ctx.parameterDecl().size();
+		//TAVA DANDO ERRO NESSA LINHA EU COMENTEI (19/07)
+		//params_list = new List<Type>(size);
+		for (int i = 0; i < size; i++) {
+			AST node = visit(ctx.parameterDecl(i)); // Precisa pegar o tipo da variável
+			params_list.addChild(node);
+		}
+		return params_list;
+	}
+
+	@Override
+	public AST visitParameterDecl(ParameterDeclContext ctx) {
+
+		AST node = newLocalVar(ctx.IDENTIFIER().getSymbol());
+		visit(ctx.type_());
+		node.setType(lastDeclType);
+		return node;
+	}
+
+	/*
 	//visita a regra block: L_CURLY statementList R_CURLY;
 	@Override
 	public AST visitBlock(BlockContext ctx) {
@@ -261,7 +378,7 @@ public class SemanticChecker extends GoParserBaseVisitor<AST> {
 	
 	}
 	*/
-
+	
 	@Override
     public AST visitBlock(GoParser.BlockContext ctx){
         AST blockTree = (AST.newSubtree(ast.NodeKind.BLOCK_NODE,Type.NO_TYPE));
@@ -274,12 +391,29 @@ public class SemanticChecker extends GoParserBaseVisitor<AST> {
             	blockTree.addChild(teste);
             }
         }    catch(Exception e) {
-            // System.out.printf("[visitBlock] Caiu exception statementList [%s]\n",e.toString());
+            //System.out.printf("[visitBlock] Caiu exception statementList [%s]\n",e.toString());
         }
         
         return blockTree;
 
     }
+	
+
+	/* 
+	@Override
+    public AST visitBlock(GoParser.BlockContext ctx){
+        AST blockTree = (AST.newSubtree(ast.NodeKind.BLOCK_NODE,Type.NO_TYPE));
+        try {        
+            AST stmt = visit(ctx.statementList());
+            blockTree.addChild(stmt);
+        }    catch(Exception e) {
+             System.out.printf("[visitBlock] Caiu exception statementList [%s]\n",e.toString());
+        }
+        
+        return blockTree;
+
+    }
+	*/
 
 	//statementList: (statement eos?)+;
 	@Override
@@ -294,23 +428,6 @@ public class SemanticChecker extends GoParserBaseVisitor<AST> {
     	
     	return stmtList;
 	}
-
-	
-	
-
-    // Visita a regra vars_sect: VAR var_decl*ctx.IDENTIFIER(i)PE);
-    // 	// No caso de não-terminais com fechos (* ou +), a chamada do método
-    // 	// correspondente retorna uma lista com todos os elementos da Parse
-    // 	// Tree que entraram no fecho. Assim, podemos percorrer (visitar) a
-    // 	// lista para construir as subárvores dos filhos.
-    // 	// Também é possível usar o iterador da lista aqui mas prefiro esse
-    // 	// estilo de loop clássico...
-    // 	for (int i = 0; i < ctx.var_decl().size(); i++) {
-    // 		AST child = visit(ctx.var_decl(i));
-    // 		node.addChild(child);
-    // 	}
-    // 	return node;
-	// }
 
 	// Visita a regra varDecl: VAR varSpec ;
     
@@ -331,8 +448,15 @@ public class SemanticChecker extends GoParserBaseVisitor<AST> {
 			AST child = idList.children.get(i);
 			//set type 
 			child.type = lastDeclType;
+			if (tamArray != 0){
+				child.sizeData = tamArray;
+			}
+
 			//vartable
 			vt.setType(child.intData, lastDeclType);
+			vt.setTamArr(child.intData, tamArray);
+
+			tamArray = -1;
     	}
     	
     	return idList;
@@ -356,6 +480,7 @@ public class SemanticChecker extends GoParserBaseVisitor<AST> {
     @Override
     public AST visitBoolType(GoParser.BoolTypeContext ctx) {
     	this.lastDeclType = Type.BOOL_TYPE;
+		this.tamArray = -1;
     	// Não tem problema retornar null aqui porque o método chamador
     	// ignora o valor de retorno.
     	return null;
@@ -365,6 +490,7 @@ public class SemanticChecker extends GoParserBaseVisitor<AST> {
 	@Override
 	public AST visitIntType(GoParser.IntTypeContext ctx) {
 		this.lastDeclType = Type.INT_TYPE;
+		this.tamArray = -1;
 		// Não tem problema retornar null aqui porque o método chamador
     	// ignora o valor de retorno.
 		return null;
@@ -373,6 +499,7 @@ public class SemanticChecker extends GoParserBaseVisitor<AST> {
 	@Override
 	public AST visitStringType(GoParser.StringTypeContext ctx){
 		this.lastDeclType = Type.STRING_TYPE;
+		this.tamArray = -1;
 //
 //		this.st.add(ctx.string_().getStop().getText());
 
@@ -383,6 +510,7 @@ public class SemanticChecker extends GoParserBaseVisitor<AST> {
 	@Override
 	public AST visitFloatType(GoParser.FloatTypeContext ctx) {
 		this.lastDeclType = Type.FLOAT_TYPE;
+		this.tamArray = -1;
 		// Não tem problema retornar null aqui porque o método chamador
     	// ignora o valor de retorno.
 		return null;
@@ -391,18 +519,38 @@ public class SemanticChecker extends GoParserBaseVisitor<AST> {
 	//!MUDAR ARRAY TYPE
 	@Override
 	public AST visitArrayType(GoParser.ArrayTypeContext ctx){
-		this.lastDeclType = Type.ARRAY_TYPE;
+//		visit(ctx.typeName()); // define type array
+
+//		this.lastDeclType = Type.ARRAY_TYPE;
+		this.tamArray = Integer.parseInt(ctx.arrayLength().getText());
+//		this.tamArray = 111;
+		Type arrt;
+		int type = ctx.typeName().getStop().getType();
+		if (type == GoLexer.INT){
+			arrt = INT_TYPE;
+		} else if (type == GoLexer.FLOAT){
+			arrt = FLOAT_TYPE;
+		} else if (type == GoLexer.STRING){
+			arrt = STRING_TYPE;
+		} else{
+			arrt = BOOL_TYPE;
+		}
+		this.lastDeclType = arrt;
     	return null; // Java says must return something even when Void
 	}
 
 	// Visita a regra assignment: IDENTIFIER index? ASSIGN expression;
 	@Override
-	public AST visitAssignment(AssignmentContext ctx) {
+	public AST visitAssignment(GoParser.AssignmentContext ctx) {
 		// Visita a expressão da direita.
 		AST exprNode = visit(ctx.expression());
 		// Visita o identificador da esquerda.
 		Token idToken = ctx.IDENTIFIER().getSymbol();
 		AST idNode = checkVar(idToken);
+		if (ctx.index() != null) {
+			idNode.sizeData = Integer.parseInt(ctx.index().DECIMAL_LIT().getText());
+		}
+
 		// Faz as verificações de tipos.
 		return checkAssign(idToken.getLine(), idNode, exprNode);
 	}
@@ -781,6 +929,26 @@ public class SemanticChecker extends GoParserBaseVisitor<AST> {
 		return visit(ctx.expression());
 	}
 
+
+	//exoression: funcCaller
+	@Override
+	public AST visitFuncCaller(GoParser.FuncCallerContext ctx) {
+		return visit(ctx.functionCaller());
+	}
+
+	//functionCaller: IDENTIFIER paramsCaller;
+	//paramsCaller: L_PAREN (IDENTIFIER (COMMA IDENTIFIER)* COMMA?)? R_PAREN;
+	@Override
+	public AST visitFunctionCaller(GoParser.FunctionCallerContext ctx) {
+		
+		// Visita o identificador da esquerda.
+		Token idToken = ctx.IDENTIFIER().getSymbol();
+		AST idNode = checkFunc(idToken);
+		return null;
+	}
+
+	
+
 	// Visita a regra expr: LPAR expr RPAR
 	//@Override
 	//public AST visitArrayLitval(ArrayLitvalContext ctx) {
@@ -790,46 +958,46 @@ public class SemanticChecker extends GoParserBaseVisitor<AST> {
 
 	// Visita a regra expression: functionLit
 	//functionLit: IDENTIFIER parameters
-	@Override
-	public AST visitFunctionLitval(FunctionLitvalContext ctx) {
-		// Visita o parametro da direita.
-		AST parameters = visit(ctx.functionLit().parameters());
-		// Visita o identificador da esquerda.
-		Token idToken = ctx.functionLit().IDENTIFIER().getSymbol();
-		AST func = checkFunc(idToken);
-
-		AST funccall = AST.newSubtree(FUNC_CALL_NODE, NO_TYPE, func);
-		return funccall;
-	}
+//	@Override
+//	public AST visitFunctionLitval(FunctionLitvalContext ctx) {
+//		// Visita o parametro da direita.
+//		AST parameters = visit(ctx.functionLit().arguments());
+//		// Visita o identificador da esquerda.
+//		Token idToken = ctx.functionLit().IDENTIFIER().getSymbol();
+//		AST func = checkFunc(idToken);
+//
+//		AST funccall = AST.newSubtree(FUNC_CALL_NODE, NO_TYPE, func);
+//		return funccall;
+//	}
 
 	//parameters:
 	//L_PAREN (parameterDecl (COMMA parameterDecl)* COMMA?)? R_PAREN;
-	@Override
-	public AST visitParameters(GoParser.ParametersContext ctx) {
-		AST list_params =  AST.newSubtree(PARAMS_LIST_NODE, NO_TYPE);
-
-		for (int i = 0; i < ctx.parameterDecl().size(); i++) {
-    		AST child = visit(ctx.parameterDecl(i));
-    		list_params.addChild(child);
-    	}
-		return list_params;
-	}
-
-
-	//parameterDecl: IDENTIFIER type_;
-	@Override
-	public AST visitParameterDecl(ParameterDeclContext ctx) {
-
-		AST var = newVar(ctx.IDENTIFIER().getSymbol());
-
-		visit(ctx.type_());
-
-		AST child = var.children.get(0);
-		child.type = lastDeclType;
-		vt.setType(child.intData, lastDeclType);
-
-		return var;
-	}
+//	@Override
+//	public AST visitParameters(GoParser.ParametersContext ctx) {
+//		AST list_params =  AST.newSubtree(PARAMS_LIST_NODE, NO_TYPE);
+//
+//		for (int i = 0; i < ctx.parameterDecl().size(); i++) {
+//    		AST child = visit(ctx.parameterDecl(i));
+//    		list_params.addChild(child);
+//    	}
+//		return list_params;
+//	}
+//
+//
+//	//parameterDecl: IDENTIFIER type_;
+//	@Override
+//	public AST visitParameterDecl(ParameterDeclContext ctx) {
+//
+//		AST var = newVar(ctx.IDENTIFIER().getSymbol());
+//
+//		visit(ctx.type_());
+//
+//		AST child = var.children.get(0);
+//		child.type = lastDeclType;
+//		vt.setType(child.intData, lastDeclType);
+//
+//		return var;
+//	}
 
 //	@Override
 //	// Visita a regra expr: ID
