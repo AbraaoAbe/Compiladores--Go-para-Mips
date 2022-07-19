@@ -565,6 +565,38 @@ public class SemanticChecker extends GoParserBaseVisitor<AST> {
 		return visit(ctx.expression());
 	}
 
+	@Override
+	public AST visitForStmt(GoParser.ForStmtContext ctx) {
+		AST for_root = AST.newSubtree(FOR_NODE, NO_TYPE);
+
+		AST stm_node = visit(ctx.forClause());
+		for(int i=0; i < stm_node.getSizeChild(); i++){
+			for_root.addChild(stm_node.getChild(i));
+		}
+
+		AST block = visit(ctx.block());
+		for_root.addChild(block);
+
+		return for_root;
+	}
+
+	//	forClause:
+	//	initStmt = simpleStmt? eos expression? eos postStmt = simpleStmt?;
+	@Override
+	public AST visitForClause(GoParser.ForClauseContext ctx) {
+		AST temp_root = AST.newSubtree(STMT_LIST_NODE, NO_TYPE);
+		if (ctx.initStmt != null){
+			temp_root.addChild(visit(ctx.initStmt));
+		}
+		if (ctx.expression() != null){
+			temp_root.addChild(visit(ctx.expression()));
+		}
+		if (ctx.postStmt != null){
+			temp_root.addChild(visit(ctx.postStmt));
+		}
+		return temp_root;
+	}
+
 	// Visita a regra typeDecl: type_spec ID SEMI
     // @Override
     // public AST visitTypeDecl(GoParser.TypeDeclContext ctx) {

@@ -85,12 +85,13 @@ statement:
 	| block
 	| ifStmt
 //	| switchStmt
-	| forStmt;
+	| forStmt
+	| ioStmt
+    	;
 
 simpleStmt:
 //	incDecStmt 
-	ioStmt
-	| assignment
+    assignment
 	| expressionStmt
 //	| shortVarDecl
 	;
@@ -167,7 +168,8 @@ recvStmt: (expressionList ASSIGN)? recvExpr = expression;
 //CLAUSULA DO FOR()
 
 //forStmt: FOR (expression? | forClause | rangeClause?) block;
-forStmt: FOR (expression? | forClause) block;
+//forStmt: FOR (expression? | forClause) block;
+forStmt: FOR forClause block;
 
 forClause:
 	initStmt = simpleStmt? eos expression? eos postStmt = simpleStmt?;

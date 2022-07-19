@@ -167,8 +167,11 @@ public class AST {
 				pw.printf("%d", this.intData);
 			}
 		}
-		pw.printf("\"];\n");
-
+		if (this.kind == NodeKind.FOR_NODE){
+			pw.printf("\", fillcolor=\"#74e882\", style=filled];\n");
+		} else {
+			pw.printf("\"];\n");
+		}
 		for (int i = 0; i < this.children.size(); i++) {
 			//se tirar do if da null pointer exception
 			//if (this.children.get(i) != null){

@@ -32,6 +32,12 @@ public enum NodeKind {
             return "if";
         }
 	},
+    FOR_NODE {
+        @Override
+        public String toString() {
+            return "for";
+        }
+    },
     INT_VAL_NODE {
 		public String toString() {
             return "";
