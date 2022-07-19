@@ -59,7 +59,6 @@ functionDecl: FUNC IDENTIFIER (signature block?);
 //
 //receiver: parameters;
 
-//TIPO VAR (DEIXA OU TIRA?)
 //varDecl: VAR (varSpec | L_PAREN (varSpec eos)* R_PAREN);
 
 varDecl: VAR varSpec;
@@ -211,6 +210,12 @@ functionType: FUNC signature;
 // fmt.Println()
 // fmt.Scan()
 
+//chamada de funcao
+functionCaller: IDENTIFIER paramsCaller;
+
+//parametros da chamada de funcao
+paramsCaller: L_PAREN (IDENTIFIER (COMMA IDENTIFIER)* COMMA?)? R_PAREN;
+
 signature:
 	parameters type_?;
     // os parâmetros da função mais o tipo do retorno, caso não tenho tipo do retorn a função não retorna nada
@@ -243,11 +248,12 @@ expression:
 	| str_v = (RAW_STRING_LIT | INTERPRETED_STRING_LIT)   #stringLit
 	| FLOAT_LIT        				#floatLit
 	| bool_v = (FALSE | TRUE) 		#boolLit
-	| functionLit					#functionLitval
-	| IDENTIFIER					# exprId
+//	| functionLit					#functionLitval
+	| functionCaller                #funcCaller
+	| IDENTIFIER					#exprId
 	;
 
-functionLit: IDENTIFIER arguments ; // func() call()
+//functionLit: IDENTIFIER arguments ; // func() call()
 
 index: L_BRACKET DECIMAL_LIT R_BRACKET;
 

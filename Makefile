@@ -6,13 +6,15 @@ JAVAC=javac
 ROOT=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 # Certifique-se de que o antlr esteja instalado em /usr/local/lib
 
-ANTLR_PATH=/usr/local/lib/antlr-4.10.1-complete.jar
+ANTLR_PATH=/mnt/c/Users/AbraaoAbe/Documents/UFES/Trab_comp/Compiladores--Go-para-Mips/antlr-4.10.1-complete.jar
 #ANTLR_PATH=${ROOT}/antlr-4.10.1-complete.jar
 CLASS_PATH_OPTION=-cp .:$(ANTLR_PATH)
 
+CP=-cp .;$(ANTLR_PATH)
+
 # Comandos como descritos na página do ANTLR.
 ANTLR4=$(JAVA) -jar $(ANTLR_PATH)
-GRUN=$(JAVA) $(CLASS_PATH_OPTION) org.antlr.v4.gui.TestRig
+GRUN=$(JAVA) $(CP) org.antlr.v4.gui.TestRig
 
 # Diretório para aonde vão os arquivos gerados.
 GEN_PATH=parser
@@ -21,8 +23,8 @@ BIN_PATH=bin
 
 # Diretório para os casos de teste
 #DATA=$(ROOT)/tests
-DATA=/home/igor/Desktop/ztests
-IN=$(DATA)
+DATA=/mnt/c/Users/AbraaoAbe/Documents/UFES/Trab_comp/Compiladores--Go-para-Mips
+IN=$(DATA)/tests
 FILE=$(IN)/simple.go
 OUT=./ast.txt
 

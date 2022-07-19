@@ -56,8 +56,11 @@ public class FuncTable {
 		Formatter f = new Formatter(sb);
 		f.format("Function table:\n");
 		for (int i = 0; i < table.size(); i++) {
-			f.format("Entry %d -- name: %s, line: %d, retorno: %s\n\t%s\n", i,
-	                 getName(i), getLine(i), getRetorno(i).toString(), getVarTable(i).toString());
+			//! var table nao tem impressão, da null pointer expeption
+			//f.format("Entry %d -- name: %s, line: %d, retorno: %s\n\t%s\n", i,
+	                 //getName(i), getLine(i), getRetorno(i).toString(), getVarTable(i).toString());
+			f.format("Entry %d -- name: %s, line: %d, retorno: %s\n", i,
+	                 getName(i), getLine(i), getRetorno(i).toString());
 		}
 		f.close();
 		return sb.toString();

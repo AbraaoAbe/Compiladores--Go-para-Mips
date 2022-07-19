@@ -1,8 +1,5 @@
 package main
 
-func test(){
-	return 10
-}
 
 func main() {
 
@@ -13,6 +10,6 @@ func main() {
 	c = 10 + d
 	e[0] = 1
 	var f float
-	//teste(a)
+	testa()
 
 }
