@@ -20,7 +20,7 @@ import parser.GoLexer;
 import parser.GoParser;
 import parser.GoParser.SourceFileContext;
 import parser.GoParser.FunctionDeclContext;
-import parser.GoParser.FunctionLitvalContext;
+//import parser.GoParser.FunctionLitvalContext;
 import parser.GoParser.BlockContext;
 import parser.GoParser.StatementListContext;
 import parser.GoParser.AssignmentContext;
@@ -409,7 +409,7 @@ public class SemanticChecker extends GoParserBaseVisitor<AST> {
             	blockTree.addChild(teste);
             }
         }    catch(Exception e) {
-            // System.out.printf("[visitBlock] Caiu exception statementList [%s]\n",e.toString());
+            //System.out.printf("[visitBlock] Caiu exception statementList [%s]\n",e.toString());
         }
         
         return blockTree;
@@ -429,23 +429,6 @@ public class SemanticChecker extends GoParserBaseVisitor<AST> {
     	
     	return stmtList;
 	}
-
-	
-	
-
-    // Visita a regra vars_sect: VAR var_decl*ctx.IDENTIFIER(i)PE);
-    // 	// No caso de não-terminais com fechos (* ou +), a chamada do método
-    // 	// correspondente retorna uma lista com todos os elementos da Parse
-    // 	// Tree que entraram no fecho. Assim, podemos percorrer (visitar) a
-    // 	// lista para construir as subárvores dos filhos.
-    // 	// Também é possível usar o iterador da lista aqui mas prefiro esse
-    // 	// estilo de loop clássico...
-    // 	for (int i = 0; i < ctx.var_decl().size(); i++) {
-    // 		AST child = visit(ctx.var_decl(i));
-    // 		node.addChild(child);
-    // 	}
-    // 	return node;
-	// }
 
 	// Visita a regra varDecl: VAR varSpec ;
     
@@ -955,6 +938,26 @@ public class SemanticChecker extends GoParserBaseVisitor<AST> {
 		// Propaga o nó criado para a expressão.
 		return visit(ctx.expression());
 	}
+
+
+	//exoression: funcCaller
+//	@Override
+//	public AST visitFuncCaller(GoParser.FuncCallerContext ctx) {
+//		return visit(ctx.functionCaller());
+//	}
+//
+//	//functionCaller: IDENTIFIER paramsCaller;
+//	//paramsCaller: L_PAREN (IDENTIFIER (COMMA IDENTIFIER)* COMMA?)? R_PAREN;
+//	@Override
+//	public AST visitFunctionCaller(GoParser.FunctionCallerContext ctx) {
+//
+//		// Visita o identificador da esquerda.
+//		Token idToken = ctx.IDENTIFIER().getSymbol();
+//		AST idNode = checkFunc(idToken);
+//		return null;
+//	}
+
+
 
 	// Visita a regra expr: LPAR expr RPAR
 	//@Override
