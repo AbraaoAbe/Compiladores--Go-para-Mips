@@ -54,6 +54,14 @@ public class AST {
 		this.children.add(child);
 	}
 
+	public int getIntData() {
+		return intData;
+	}
+
+	public void setType(Type type) {
+		this.type = type;
+	}
+
 	// Retorna o filho no índice passado.
 	// Não há nenhuma verificação de erros!
 	public AST getChild(int idx) {

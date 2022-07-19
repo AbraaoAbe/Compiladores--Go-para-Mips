@@ -9,6 +9,7 @@ import static typing.Type.FLOAT_TYPE;
 import static typing.Type.STRING_TYPE;
 import static typing.Type.ARRAY_TYPE;
 
+import com.sun.jdi.LocalVariable;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
@@ -90,6 +91,8 @@ public class SemanticChecker extends GoParserBaseVisitor<AST> {
 	private StrTable st = new StrTable();   // Tabela de strings.
     private VarTable vt = new VarTable();   // Tabela de variáveis.
 	private FuncTable ft = new FuncTable();
+	private VarTable localvt;
+	private List<Type> list_params;
 
     Type lastDeclType;  // Variável "global" com o último tipo declarado.
 	int tamArray;
@@ -138,7 +141,7 @@ public class SemanticChecker extends GoParserBaseVisitor<AST> {
     		System.exit(1);
             return null; // Never reached.
         }
-    	return new AST(FUNC_USE_NODE, idx, ft.getType(idx));
+    	return new AST(FUNC_USE_NODE, idx, ft.getRetorno(idx));
     }
 
     // Cria uma nova variável a partir do dado token.
@@ -188,6 +191,35 @@ public class SemanticChecker extends GoParserBaseVisitor<AST> {
 		Type returns = lastDeclType;
 		ft.addFunc(text, line, param, returns, new VarTable());
 
+	}
+
+	AST checkLocalVar(Token token) {
+		String text = token.getText();
+		int line = token.getLine();
+		int idx = localvt.lookupVar(text);
+		if (idx == -1) {
+			System.err.printf("SEMANTIC ERROR (%d): variable '%s' was not declared.\n", line, text);
+			// A partir de agora vou abortar no primeiro erro para facilitar.
+			System.exit(1);
+			return null; // Never reached.
+		}
+		return new AST(VAR_USE_NODE, idx, localvt.getType(idx));
+	}
+
+	// Cria uma nova variável a partir do dado token.
+	// Retorna um nó do tipo 'var declaration'.
+	AST newLocalVar(Token token) {
+		String text = token.getText();
+		int line = token.getLine();
+		int idx = localvt.lookupVar(text);
+		if (idx != -1) {
+			System.err.printf("SEMANTIC ERROR (%d): variable '%s' already declared at line %d.\n", line, text, vt.getLine(idx));
+			// A partir de agora vou abortar no primeiro erro para facilitar.
+			System.exit(1);
+			return null; // Never reached.
+		}
+		idx = localvt.addVar(text, line, NO_TYPE, -1);
+		return new AST(VAR_DECL_NODE, idx, NO_TYPE);
 	}
 
     // ----------------------------------------------------------------------------
@@ -269,34 +301,65 @@ public class SemanticChecker extends GoParserBaseVisitor<AST> {
 
 		AST func = newFunc(ctx.IDENTIFIER().getSymbol()); // Precisa pegar o tipo da funcao
 
-		AST sig = visit(ctx.signature());
+		int idx = func.getIntData();
+		localvt = ft.getVarTable(idx); // Set localvt
 
+		AST params = visit(ctx.signature()); // visit return type
+		func.addChild(params);
+
+		// Set type for node and func table
+		func.setType(lastDeclType);
+		ft.setRetorno(idx, lastDeclType);
+
+		// Backup the global vartable
+		VarTable backup = vt;
+		vt = localvt;
+		// Now all the variables created will be inserted on localvt
 		AST block = visit(ctx.block());
-
-		//func.addChild(sig);
 		func.addChild(block);
 
+		// Come back to global vartable;
+		vt = backup;
 
 		return func;
 	}
-//
-//	}
-//	//	signature:
-//	//	parameters type_?;
-//	public AST visitSignature(GoParser.SignatureContext  ctx){
-//
-//		AST sig = new AST();
-//
-//		AST params = visit(ctx.parameters());
-//		lastDeclType = null;
-//		visit(ctx.type_());
-//		if (lastDeclType){
-//			AST retorno = new AST()
-//			sig.addChild();
-//		}
-//	}
 
-	/* 
+	//	signature:
+	//	parameters type_?;
+	public AST visitSignature(GoParser.SignatureContext  ctx){
+		AST params = visit(ctx.parameters());
+
+		if (ctx.type_() != null){
+			visit(ctx.type_());
+		} else{
+			lastDeclType = NO_TYPE;
+		}
+		return params;
+	}
+
+	@Override
+	public AST visitParameters(GoParser.ParametersContext ctx) {
+
+		AST params_list = AST.newSubtree(PARAMS_LIST_NODE, NO_TYPE);
+		int size = ctx.parameterDecl().size();
+		params_list = new List<Type>(size);
+		for (int i = 0; i < size; i++) {
+			AST node = visit(ctx.parameterDecl(i)); // Precisa pegar o tipo da variável
+			params_list.addChild(node);
+		}
+		return params_list;
+	}
+
+	@Override
+	public AST visitParameterDecl(ParameterDeclContext ctx) {
+
+		AST node = newLocalVar(ctx.IDENTIFIER().getSymbol());
+		visit(ctx.type_());
+		node.setType(lastDeclType);
+		return node;
+	}
+
+	/*
 	//visita a regra block: L_CURLY statementList R_CURLY;
 	@Override
 	public AST visitBlock(BlockContext ctx) {

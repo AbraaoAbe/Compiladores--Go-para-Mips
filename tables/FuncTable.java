@@ -43,21 +43,21 @@ public class FuncTable {
 		return table.get(i).line;
 	}
 	
-	public Type getType(int i) {
-		return table.get(i).type;
+	public Type getRetorno(int i) {
+		return table.get(i).retorno;
 	}
 
-	public void setType(int idx, Type t){
-		table.get(idx).type = t;
+	public void setRetorno(int idx, Type t){
+		table.get(idx).retorno = t;
 	}
-	
+
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
 		Formatter f = new Formatter(sb);
 		f.format("Function table:\n");
 		for (int i = 0; i < table.size(); i++) {
-			f.format("Entry %d -- name: %s, line: %d, type: %s\n", i,
-	                 getName(i), getLine(i), getType(i).toString());
+			f.format("Entry %d -- name: %s, line: %d, retorno: %s\n\t%s\n", i,
+	                 getName(i), getLine(i), getRetorno(i).toString(), getVarTable(i).toString());
 		}
 		f.close();
 		return sb.toString();
@@ -89,14 +89,14 @@ public class FuncTable {
 		String name;
 		int line;
 		List<Type> param = new ArrayList<Type>();
-		Type type;
+		Type retorno;
 		VarTable vt = new VarTable();
 
 		Entry(String name, int line, List<Type> param, Type retorno, VarTable vt) {
 			this.name = name;
 			this.line = line;
 			this.param = param;
-			this.type = retorno;
+			this.retorno = retorno;
 			this.vt = vt;
 		}
 
