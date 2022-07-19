@@ -75,23 +75,21 @@ statementList: (statement eos?)+;
 
 //STATUS
 statement:
-	varDecl
-	| labeledStmt
-	| simpleStmt
-	| returnStmt
-	| breakStmt
-	| continueStmt
-//	| fallthroughStmt
-	| block
-	| ifStmt
-//	| switchStmt
-	| forStmt
-	| ioStmt
-    	;
+	varDecl #stmtVarDecl
+	| simpleStmt #stmtSimple
+	| returnStmt #stmtReturn
+	| BREAK #stmtBreak
+	| CONTINUE #stmtContinue
+	| block #stmtBlock
+	| ifStmt #stmtIf
+	| forStmt #stmtFor
+//	| ioStmt
+	;
 
 simpleStmt:
 //	incDecStmt 
-    assignment
+	ioStmt
+	| assignment
 	| expressionStmt
 //	| shortVarDecl
 	;
@@ -114,24 +112,25 @@ assignment: IDENTIFIER index? ASSIGN expression;
 
 emptyStmt: EOS | SEMI;
 
-labeledStmt: IDENTIFIER COLON statement?;
+//labeledStmt: IDENTIFIER COLON statement?;
 
 returnStmt: RETURN expressionList?;
 
-breakStmt: BREAK IDENTIFIER?;
+//breakStmt: BREAK;
 
-continueStmt: CONTINUE IDENTIFIER?;
+//continueStmt: CONTINUE;
 
 //fallthroughStmt: FALLTHROUGH;
 
 //CLAUSULA DO IF 
 ifStmt:
-	IF ( expression
-			| eos expression
-			| simpleStmt eos expression
-			) block (
-		ELSE (ifStmt | block)
-	)?;
+	IF ( expression  ) block ( ELSE block )?;
+
+//CLAUSULA DO IF
+//ifStmt:
+//	IF ( expression | eos expression | simpleStmt eos expression )
+//		block ( ELSE (ifStmt | block) )?;
+
 
 //CLAUSULA DO SWITCH E TYPESWITCH 
 //switchStmt: exprSwitchStmt | typeSwitchStmt;
@@ -216,7 +215,7 @@ functionType: FUNC signature;
 functionCaller: IDENTIFIER paramsCaller;
 
 //parametros da chamada de funcao
-paramsCaller: L_PAREN (IDENTIFIER (COMMA IDENTIFIER)* COMMA?)? R_PAREN;
+paramsCaller: L_PAREN (expression (COMMA expression)* COMMA?)? R_PAREN;
 
 signature:
 	parameters type_?;
@@ -264,6 +263,7 @@ arguments:
 	L_PAREN (
 		(expressionList | (COMMA expressionList)?) COMMA?
 	)? R_PAREN;
+
 
 //methodExpr: nonNamedType DOT IDENTIFIER;
 

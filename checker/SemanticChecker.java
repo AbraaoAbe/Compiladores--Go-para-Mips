@@ -313,6 +313,7 @@ public class SemanticChecker extends GoParserBaseVisitor<AST> {
 		return this.root;
 	}
 
+<<<<<<< Updated upstream
 	//visita a regra functionDecl: FUNC IDENTIFIER (signature block?);
 //	@Override
 //	public AST visitFunctionDecl(FunctionDeclContext ctx) {
@@ -377,6 +378,73 @@ public class SemanticChecker extends GoParserBaseVisitor<AST> {
 //		node.setType(lastDeclType);
 //		return node;
 //	}
+=======
+	// //visita a regra functionDecl: FUNC IDENTIFIER (signature block?);
+	// @Override
+	// public AST visitFunctionDecl(FunctionDeclContext ctx) {
+
+
+	// 	AST func = newFunc(ctx.IDENTIFIER().getSymbol()); // Precisa pegar o tipo da funcao
+
+	// 	int idx = func.getIntData();
+	// 	localvt = ft.getVarTable(idx); // Set localvt
+
+	// 	AST params = visit(ctx.signature()); // visit return type
+	// 	func.addChild(params);
+
+	// 	// Set type for node and func table
+	// 	func.setType(lastDeclType);
+	// 	ft.setRetorno(idx, lastDeclType);
+
+	// 	// Backup the global vartable
+	// 	VarTable backup = vt;
+	// 	vt = localvt;
+	// 	// Now all the variables created will be inserted on localvt
+	// 	AST block = visit(ctx.block());
+	// 	func.addChild(block);
+
+	// 	// Come back to global vartable;
+	// 	vt = backup;
+
+	// 	return func;
+	// }
+
+	// //	signature:
+	// //	parameters type_?;
+	// public AST visitSignature(GoParser.SignatureContext  ctx){
+	// 	AST params = visit(ctx.parameters());
+
+	// 	if (ctx.type_() != null){
+	// 		visit(ctx.type_());
+	// 	} else{
+	// 		lastDeclType = NO_TYPE;
+	// 	}
+	// 	return params;
+	// }
+
+	// @Override
+	// public AST visitParameters(GoParser.ParametersContext ctx) {
+
+	// 	AST params_list = AST.newSubtree(PARAMS_LIST_NODE, NO_TYPE);
+	// 	int size = ctx.parameterDecl().size();
+	// 	//TAVA DANDO ERRO NESSA LINHA EU COMENTEI (19/07)
+	// 	//params_list = new List<Type>(size);
+	// 	for (int i = 0; i < size; i++) {
+	// 		AST node = visit(ctx.parameterDecl(i)); // Precisa pegar o tipo da variável
+	// 		params_list.addChild(node);
+	// 	}
+	// 	return params_list;
+	// }
+
+	// @Override
+	// public AST visitParameterDecl(ParameterDeclContext ctx) {
+
+	// 	AST node = newLocalVar(ctx.IDENTIFIER().getSymbol());
+	// 	visit(ctx.type_());
+	// 	node.setType(lastDeclType);
+	// 	return node;
+	// }
+>>>>>>> Stashed changes
 
 	/*
 	//visita a regra block: L_CURLY statementList R_CURLY;
@@ -409,7 +477,7 @@ public class SemanticChecker extends GoParserBaseVisitor<AST> {
             	blockTree.addChild(teste);
             }
         }    catch(Exception e) {
-            //System.out.printf("[visitBlock] Caiu exception statementList [%s]\n",e.toString());
+            System.out.printf("[visitBlock] Caiu exception statementList [%s]\n",e.toString());
         }
         
         return blockTree;
@@ -429,6 +497,7 @@ public class SemanticChecker extends GoParserBaseVisitor<AST> {
     	
     	return stmtList;
 	}
+
 
 	// Visita a regra varDecl: VAR varSpec ;
     
@@ -548,6 +617,7 @@ public class SemanticChecker extends GoParserBaseVisitor<AST> {
 		// Visita o identificador da esquerda.
 		Token idToken = ctx.IDENTIFIER().getSymbol();
 		AST idNode = checkVar(idToken);
+<<<<<<< Updated upstream
 		if (ctx.index() != null) {
 //			idNode.sizeData = Integer.parseInt(ctx.index().DECIMAL_LIT().getText());
 			AST index_node = visit(ctx.index());
@@ -555,6 +625,11 @@ public class SemanticChecker extends GoParserBaseVisitor<AST> {
 //			AST some =
 
 		}
+=======
+		// if (ctx.index() != null) {
+		// 	idNode.sizeData = Integer.parseInt(ctx.index().DECIMAL_LIT().getText());
+		// }
+>>>>>>> Stashed changes
 
 		// Faz as verificações de tipos.
 		return checkAssign(idToken.getLine(), idNode, exprNode);
@@ -659,7 +734,15 @@ public class SemanticChecker extends GoParserBaseVisitor<AST> {
         return AST.newSubtree(ASSIGN_NODE, NO_TYPE, l, r);
     }
 
+	
+	//ponte
+	@Override
+	public AST visitStmtIf(GoParser.StmtIfContext ctx){
+		return visit(ctx.ifStmt());
+	}
+
 	// Visita a regra if_stmt: IF expr THEN stmt+ (ELSE stmt+)? END
+	//ifStmt: IF ( expression  ) block ( ELSE block )?;
 	@Override
 	public AST visitIfStmt(GoParser.IfStmtContext ctx) {
 		// Esse é o método mais complicado da AST. A complicação surge
@@ -688,11 +771,8 @@ public class SemanticChecker extends GoParserBaseVisitor<AST> {
 		if (ctx.ELSE() == null) {
 			// Caso em que não existe um bloco de ELSE. Aí fica simples
 			// porque todos os comandos pertencem ao bloco do THEN.
-			AST thenNode = AST.newSubtree(BLOCK_NODE, NO_TYPE);
-			for (int i = 0; i < ctx.block().size(); i++) {
-	    		AST child = visit(ctx.block(i));
-	    		thenNode.addChild(child);
-			}
+			AST thenNode = visit(ctx.block(0));
+			
 			return AST.newSubtree(IF_NODE, NO_TYPE, exprNode, thenNode);
 		} else {
 			// Caso em que existe um bloco de ELSE. Aí precisamos separar
@@ -701,36 +781,52 @@ public class SemanticChecker extends GoParserBaseVisitor<AST> {
 			// precisamos identificar o índice do ELSE na lista de todos
 			// os filhos da Parse Tree.
 
-			// Faz uma busca pelo token na lista de filhos.
-			TerminalNode elseToken = ctx.ELSE();
-			int elseIdx = -1;
-			for (int i = 0; i < ctx.children.size(); i++) {
-				if (ctx.children.get(i).equals(elseToken)) {
-					elseIdx = i;
-					break;
-				}
-			}
+			// Cria o nó com o bloco de comandos do THEN.
+			AST thenNode = AST.newSubtree(BLOCK_NODE, NO_TYPE);
+			
+			//primeiro bloco pertence ao if
+	    	AST childThen = visit(ctx.block(0));
+	    	thenNode.addChild(childThen);
+			
+
+			// Cria o nó com o bloco de comandos do ELSE.
+			AST elseNode = AST.newSubtree(BLOCK_NODE, NO_TYPE);
+			//segundo bloco pertence ao else
+	    	AST childElse = visit(ctx.block(1));
+	    	elseNode.addChild(childElse);
+			
+
+			// // Faz uma busca pelo token na lista de filhos e retorna o indice do mesmo
+			// TerminalNode elseToken = ctx.ELSE();
+			// int elseIdx = -1;
+			
+			// for (int i = 0; i < ctx.children.size(); i++) {
+			// 	if (ctx.children.get(i).equals(elseToken)) {
+			// 		elseIdx = i;
+			// 		break;
+			// 	}
+			// }
 
 			// Temos que elseIdx é o índice na lista de todos os filhos.
 			// Por outro lado, a lista de 'stmts' começa do índice zero.
 			// O offset entre as duas listas é 3 porque a regra começa com
 			// IF expr THEN
 			// ou seja, há 3 símbolos antes do primeiro bloco de 'stmt+'.
-			int thenEnd = elseIdx - 3;
+			// int thenEnd = elseIdx - 3;
 
-			// Cria o nó com o bloco de comandos do THEN.
-			AST thenNode = AST.newSubtree(BLOCK_NODE, NO_TYPE);
-			for (int i = 0; i < thenEnd; i++) {
-	    		AST child = visit(ctx.block(i));
-	    		thenNode.addChild(child);
-			}
+			// // Cria o nó com o bloco de comandos do THEN.
+			// AST thenNode = AST.newSubtree(BLOCK_NODE, NO_TYPE);
+			// for (int i = 0; i < thenEnd; i++) {
+	    	// 	AST child = visit(ctx.block(i));
+	    	// 	thenNode.addChild(child);
+			// }
 
-			// Cria o nó com o bloco de comandos do ELSE.
-			AST elseNode = AST.newSubtree(BLOCK_NODE, NO_TYPE);
-			for (int i = thenEnd; i < ctx.block().size(); i++) {
-	    		AST child = visit(ctx.block(i));
-	    		elseNode.addChild(child);
-			}
+			// // Cria o nó com o bloco de comandos do ELSE.
+			// AST elseNode = AST.newSubtree(BLOCK_NODE, NO_TYPE);
+			// for (int i = thenEnd; i < ctx.block().size(); i++) {
+	    	// 	AST child = visit(ctx.block(i));
+	    	// 	elseNode.addChild(child);
+			// }
 
 			return AST.newSubtree(IF_NODE, NO_TYPE, exprNode, thenNode, elseNode);
 		}
@@ -990,6 +1086,17 @@ public class SemanticChecker extends GoParserBaseVisitor<AST> {
 //	}
 
 
+<<<<<<< Updated upstream
+=======
+	@Override
+	public AST visitStmtBreak(GoParser.StmtBreakContext ctx) {
+		return AST.newSubtree(BREAK_NODE, NO_TYPE);
+	}
+
+	
+
+	
+>>>>>>> Stashed changes
 
 	// Visita a regra expr: LPAR expr RPAR
 	//@Override

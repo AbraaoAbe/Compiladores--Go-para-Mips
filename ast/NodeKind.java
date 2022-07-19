@@ -217,7 +217,12 @@ public enum NodeKind {
     },
     STMT_LIST_NODE {
 		public String toString() {
-            return "var_list";
+            return "stmt_list";
+        }
+	},
+    BREAK_NODE {
+		public String toString() {
+            return "break";
         }
 	};
 
