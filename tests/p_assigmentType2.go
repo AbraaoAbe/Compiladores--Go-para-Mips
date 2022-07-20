@@ -3,5 +3,8 @@ package main
 import "fmt"
 
 func main() {
-	x := 1 +
+	var a int
+	var b int
+
+	a = b < 10
 }

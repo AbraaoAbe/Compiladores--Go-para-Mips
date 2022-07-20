@@ -138,7 +138,9 @@ public class SemanticChecker extends GoParserBaseVisitor<AST> {
 		Unif unif = lt.unifyIndexArith(rt);
 
 		if (unif.type == NO_TYPE) {
-			typeError(line, "[]", lt, rt);
+			System.out.printf("SEMANTIC ERROR (%d): index expected an int type but found '%s'.\n",
+    			line,  rt.toString());
+    		System.exit(1);
 		}
 
 		// Cria os nós de conversão que forem necessários segundo a
@@ -590,7 +592,9 @@ public class SemanticChecker extends GoParserBaseVisitor<AST> {
 			temp_root.addChild(visit(ctx.initStmt));
 		}
 		if (ctx.expression() != null){
-			temp_root.addChild(visit(ctx.expression()));
+			AST exprNode = visit(ctx.expression());
+			checkBoolExpr(ctx.expression().getStop().getLine(), "for", exprNode.type);
+			temp_root.addChild(exprNode);
 		}
 		if (ctx.postStmt != null){
 			temp_root.addChild(visit(ctx.postStmt));
