@@ -94,8 +94,8 @@ simpleStmt:
 //	| shortVarDecl
 	;
 
-ioStmt: (SCAN arguments) #scanIO
-        | (PRINT arguments) #printIO;
+ioStmt: (SCAN paramsCaller) #scanIO
+        | (PRINT paramsCaller) #printIO;
 
 expressionStmt: expression;
 
@@ -251,7 +251,7 @@ expression:
 	| bool_v = (FALSE | TRUE) 		#boolLit
 //	| functionLit					#functionLitval
 	| functionCaller                #funcCaller
-	| IDENTIFIER					#exprId
+	| IDENTIFIER index?					#exprId
 	;
 
 //functionLit: IDENTIFIER arguments ; // func() call()

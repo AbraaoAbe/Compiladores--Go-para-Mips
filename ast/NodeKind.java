@@ -224,6 +224,11 @@ public enum NodeKind {
 		public String toString() {
             return "break";
         }
+	},
+    INDEX_NODE {
+		public String toString() {
+            return "index";
+        }
 	};
 
 	

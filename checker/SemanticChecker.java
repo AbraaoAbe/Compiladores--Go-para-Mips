@@ -313,7 +313,6 @@ public class SemanticChecker extends GoParserBaseVisitor<AST> {
 		return this.root;
 	}
 
-<<<<<<< Updated upstream
 	//visita a regra functionDecl: FUNC IDENTIFIER (signature block?);
 //	@Override
 //	public AST visitFunctionDecl(FunctionDeclContext ctx) {
@@ -378,73 +377,6 @@ public class SemanticChecker extends GoParserBaseVisitor<AST> {
 //		node.setType(lastDeclType);
 //		return node;
 //	}
-=======
-	// //visita a regra functionDecl: FUNC IDENTIFIER (signature block?);
-	// @Override
-	// public AST visitFunctionDecl(FunctionDeclContext ctx) {
-
-
-	// 	AST func = newFunc(ctx.IDENTIFIER().getSymbol()); // Precisa pegar o tipo da funcao
-
-	// 	int idx = func.getIntData();
-	// 	localvt = ft.getVarTable(idx); // Set localvt
-
-	// 	AST params = visit(ctx.signature()); // visit return type
-	// 	func.addChild(params);
-
-	// 	// Set type for node and func table
-	// 	func.setType(lastDeclType);
-	// 	ft.setRetorno(idx, lastDeclType);
-
-	// 	// Backup the global vartable
-	// 	VarTable backup = vt;
-	// 	vt = localvt;
-	// 	// Now all the variables created will be inserted on localvt
-	// 	AST block = visit(ctx.block());
-	// 	func.addChild(block);
-
-	// 	// Come back to global vartable;
-	// 	vt = backup;
-
-	// 	return func;
-	// }
-
-	// //	signature:
-	// //	parameters type_?;
-	// public AST visitSignature(GoParser.SignatureContext  ctx){
-	// 	AST params = visit(ctx.parameters());
-
-	// 	if (ctx.type_() != null){
-	// 		visit(ctx.type_());
-	// 	} else{
-	// 		lastDeclType = NO_TYPE;
-	// 	}
-	// 	return params;
-	// }
-
-	// @Override
-	// public AST visitParameters(GoParser.ParametersContext ctx) {
-
-	// 	AST params_list = AST.newSubtree(PARAMS_LIST_NODE, NO_TYPE);
-	// 	int size = ctx.parameterDecl().size();
-	// 	//TAVA DANDO ERRO NESSA LINHA EU COMENTEI (19/07)
-	// 	//params_list = new List<Type>(size);
-	// 	for (int i = 0; i < size; i++) {
-	// 		AST node = visit(ctx.parameterDecl(i)); // Precisa pegar o tipo da variável
-	// 		params_list.addChild(node);
-	// 	}
-	// 	return params_list;
-	// }
-
-	// @Override
-	// public AST visitParameterDecl(ParameterDeclContext ctx) {
-
-	// 	AST node = newLocalVar(ctx.IDENTIFIER().getSymbol());
-	// 	visit(ctx.type_());
-	// 	node.setType(lastDeclType);
-	// 	return node;
-	// }
->>>>>>> Stashed changes
 
 	/*
 	//visita a regra block: L_CURLY statementList R_CURLY;
@@ -617,7 +549,6 @@ public class SemanticChecker extends GoParserBaseVisitor<AST> {
 		// Visita o identificador da esquerda.
 		Token idToken = ctx.IDENTIFIER().getSymbol();
 		AST idNode = checkVar(idToken);
-<<<<<<< Updated upstream
 		if (ctx.index() != null) {
 //			idNode.sizeData = Integer.parseInt(ctx.index().DECIMAL_LIT().getText());
 			AST index_node = visit(ctx.index());
@@ -625,11 +556,6 @@ public class SemanticChecker extends GoParserBaseVisitor<AST> {
 //			AST some =
 
 		}
-=======
-		// if (ctx.index() != null) {
-		// 	idNode.sizeData = Integer.parseInt(ctx.index().DECIMAL_LIT().getText());
-		// }
->>>>>>> Stashed changes
 
 		// Faz as verificações de tipos.
 		return checkAssign(idToken.getLine(), idNode, exprNode);
@@ -838,16 +764,32 @@ public class SemanticChecker extends GoParserBaseVisitor<AST> {
 	@Override
 	public AST visitScanIO(GoParser.ScanIOContext ctx) {
 //		AST idNode = checkVar(ctx.ID().getSymbol());
-		AST exprNode = visit(ctx.arguments());
+		AST exprNode = visit(ctx.paramsCaller());
 		return AST.newSubtree(SCAN_NODE, NO_TYPE, exprNode);
 	}
 	// Visita o ioStmt:printIo
 	@Override
 	public AST visitPrintIO(GoParser.PrintIOContext ctx) {
 //		AST idNode = checkVar(ctx.ID().getSymbol());
-		AST exprNode = visit(ctx.arguments());
+		AST exprNode = visit(ctx.paramsCaller());
 		return AST.newSubtree(PRINT_NODE, NO_TYPE, exprNode);
 	}
+
+	//paramsCaller: L_PAREN (expression (COMMA expression)* COMMA?)? R_PAREN;
+	@Override
+	public AST visitParamsCaller(GoParser.ParamsCallerContext ctx) {
+		int tam = ctx.expression().size();
+		AST paramsList = AST.newSubtree(PARAMS_LIST_NODE, NO_TYPE);
+
+		for(int i = 0 ; i < tam; i++){
+			AST child = visit(ctx.expression(i));
+			paramsList.addChild(child);
+		}
+
+		return paramsList;
+	}
+
+	
 
 	// Visita as subregra de expression
 	//	expression:
@@ -1006,7 +948,7 @@ public class SemanticChecker extends GoParserBaseVisitor<AST> {
 
 
 	// Visita a regra expr: TRUE
-	@Override
+	//@Override
 //	public AST visitExprTrue(ExprTrueContext ctx) {
 //		// Fim da recursão, representa 'true' como o inteiro '1'.
 //		return new AST(BOOL_VAL_NODE, 1, BOOL_TYPE);
@@ -1019,6 +961,7 @@ public class SemanticChecker extends GoParserBaseVisitor<AST> {
 //		return new AST(BOOL_VAL_NODE, 0, BOOL_TYPE);
 //	}
 	// Esse visitExprTrue ou False são convertido nesse visitor
+	@Override
 	public AST visitBoolLit(BoolLitContext ctx){
 		if (ctx.bool_v.getType() == GoParser.FALSE){ // checa se o valor de bool é false
 			return new AST(BOOL_VAL_NODE, 0,BOOL_TYPE);
@@ -1057,7 +1000,18 @@ public class SemanticChecker extends GoParserBaseVisitor<AST> {
 	// Visita a regra expr: ID
 	public AST visitExprId(ExprIdContext ctx) {
 		// Fim da recursão, retorna um nó de 'var use'.
-		return checkVar(ctx.IDENTIFIER().getSymbol());
+
+		//sem array
+		if(ctx.index() == null){
+			return checkVar(ctx.IDENTIFIER().getSymbol());
+		}else{//com array
+			AST var = checkVar(ctx.IDENTIFIER().getSymbol());
+			AST child = visit(ctx.index());
+
+			var.addChild(child);
+			return var;
+		}
+		
 	}
 
 	// Visita a regra expr: LPAR expr RPAR
@@ -1086,22 +1040,16 @@ public class SemanticChecker extends GoParserBaseVisitor<AST> {
 //	}
 
 
-<<<<<<< Updated upstream
-=======
 	@Override
 	public AST visitStmtBreak(GoParser.StmtBreakContext ctx) {
 		return AST.newSubtree(BREAK_NODE, NO_TYPE);
 	}
-
 	
-
-	
->>>>>>> Stashed changes
 
 	// Visita a regra expr: LPAR expr RPAR
 	//@Override
 	//public AST visitArrayLitval(ArrayLitvalContext ctx) {
-		// Propaga o nó criado para a expressão.
+	// Propaga o nó criado para a expressão.
 	//	return visit(ctx.expression());
 	//}
 
