@@ -8,6 +8,7 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
 
+import tables.FuncTable;
 import tables.VarTable;
 import typing.Type;
 
@@ -18,7 +19,7 @@ public class AST {
 	// Note que não há union em Java, então aquele truque de ler
 	// e/ou escrever o campo com formatos diferentes não funciona aqui.
 	// Os campos 'data' NÃO ficam sincronizados!
-	public  final NodeKind kind;
+	public  NodeKind kind;
 	public  final int intData;
 	public  final float floatData;
 
@@ -58,8 +59,15 @@ public class AST {
 		return intData;
 	}
 
+	public Type getType(){return this.type;}
+
 	public void setType(Type type) {
 		this.type = type;
+	}
+
+	public NodeKind getKind(){return this.kind;}
+	public void setKind(NodeKind kind){
+		this.kind = kind;
 	}
 
 	// Retorna o filho no índice passado.
@@ -92,6 +100,8 @@ public class AST {
 	private static int nr;
 	private static VarTable vt;
 
+	private static FuncTable ft;
+
 	// Imprime recursivamente a codificação em DOT da subárvore começando no nó atual.
 	// Usa stderr como saída para facilitar o redirecionamento, mas isso é só um hack.
 	private int printNodeDot() {
@@ -103,8 +113,9 @@ public class AST {
 	    }
 	    if (this.kind == NodeKind.VAR_DECL_NODE || this.kind == NodeKind.VAR_USE_NODE) {
 	    	System.err.printf("%s@", vt.getName(this.intData));
-	    } 
-		else {
+	    } else if (this.kind == NodeKind.PARAMS_NODE){
+			System.err.printf("%s@", vt.getName(this.intData));
+		} else {
 	    	System.err.printf("%s", this.kind.toString());
 	    }
 	    if (NodeKind.hasData(this.kind)) {
@@ -139,21 +150,26 @@ public class AST {
 	    tree.printNodeDot();
 	    System.err.printf("}\n");
 	}
-	private int printNodeFileDot(PrintWriter pw) {
+	private int printNodeFileDot(PrintWriter pw, int func_index) {
 		int myNr = nr++;
-
 		pw.printf("node%d[label=\"", myNr);
 		if (this.type != NO_TYPE) {
 			pw.printf("(%s) ", this.type.toString());
 		}
-		if (this.kind == NodeKind.VAR_DECL_NODE || this.kind == NodeKind.VAR_USE_NODE) {
+		if (this.kind == NodeKind.FUNC_DECL_NODE || this.kind == NodeKind.FUNC_USE_NODE){
+			func_index = this.intData;
+			pw.printf("%s/%s@", this.kind.toString(), ft.getName(func_index));
+		} else if (this.kind == NodeKind.PARAMS_NODE){
+			pw.printf("%s@", ft.getVarTable(func_index).getName(this.intData));
+		} else if (this.kind == NodeKind.VAR_DECL_NODE || this.kind == NodeKind.VAR_USE_NODE) {
+			VarTable tb;
+			if (func_index == -1){ tb = vt; } else { tb = ft.getVarTable(func_index); }
 			if (this.sizeData >= 0){
-				pw.printf("%s[%d]@", vt.getName(this.intData), this.sizeData);
+				pw.printf("%s[%d]@", tb.getName(this.intData), this.sizeData);
 			} else {
-				pw.printf("%s@",  vt.getName(this.intData));
+				pw.printf("%s@",  tb.getName(this.intData));
 			}
-		}
-		else {
+		} else {
 			pw.printf("%s", this.kind.toString());
 		}
 		if (NodeKind.hasData(this.kind)) {
@@ -174,23 +190,24 @@ public class AST {
 		}
 		for (int i = 0; i < this.children.size(); i++) {
 			//se tirar do if da null pointer exception
-			//if (this.children.get(i) != null){
-			int childNr = this.children.get(i).printNodeFileDot(pw);
-			pw.printf("node%d -> node%d;\n", myNr, childNr);
-			//}
+			if (this.children.get(i) != null) {
+				int childNr = this.children.get(i).printNodeFileDot(pw, func_index);
+				pw.printf("node%d -> node%d;\n", myNr, childNr);
+			}
 
 		}
 		return myNr;
 	}
 
-	public static void printFileDot(AST tree, VarTable table) {
+	public static void printFileDot(AST tree, VarTable table, FuncTable funcT) {
 		nr = 0;
 		vt = table;
+		ft = funcT;
 		try {
 			FileWriter fileWriter = new FileWriter("./tree.dot");
 			PrintWriter printWriter = new PrintWriter(fileWriter);
 			printWriter.printf("digraph {\ngraph [ordering=\"out\"];\n");
-			tree.printNodeFileDot(printWriter);
+			tree.printNodeFileDot(printWriter, -1);
 			printWriter.printf("}\n");
 			printWriter.close();
 		} catch (IOException e) {

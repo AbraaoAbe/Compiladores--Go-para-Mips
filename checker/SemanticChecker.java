@@ -165,83 +165,95 @@ public class SemanticChecker extends GoParserBaseVisitor<AST> {
     	return new AST(FUNC_USE_NODE, idx, ft.getRetorno(idx));
     }
 
-    // Cria uma nova variável a partir do dado token.
-    // Retorna um nó do tipo 'var declaration'.
-    AST newFunc(Token token) {
-    	String text = token.getText();
-    	int line = token.getLine();
-   		int idx = ft.lookupFunc(text);
-        if (idx != -1) {
-        	System.err.printf("SEMANTIC ERROR (%d): variable '%s' already declared at line %d.\n", line, text, vt.getLine(idx));
-        	// A partir de agora vou abortar no primeiro erro para facilitar.
-        	System.exit(1);
-            return null; // Never reached.
-        }
-        idx = ft.addFunc(text, line, null, NO_TYPE, null);
-        return new AST(FUNC_DECL_NODE, idx, NO_TYPE);
-    }
-
-	void newFunc(GoParser.FunctionDeclContext ctx) {
+	AST newFunc(GoParser.FunctionDeclContext ctx) {
 		String text = ctx.getChild(1).getText();
 		int line = ctx.IDENTIFIER().getSymbol().getLine();
-		int idx = ft.lookupFunc(text);
-		if (idx != -1) {
+		int exist_idx = ft.lookupFunc(text);
+		if (exist_idx != -1) {
 			System.err.printf(
 					"SEMANTIC ERROR (%d): function '%s' already declared at line %d.\n",
-					line, text, ft.getLine(idx));
+					line, text, ft.getLine(exist_idx));
 			System.exit(1);
 //			return null;
 
 		}
+
+		VarTable backup = vt;
+		vt = new VarTable();
+		//
+		int size_now = ft.getTable().size();
+		AST root = new AST(FUNC_DECL_NODE, size_now, NO_TYPE);
+
 		// Cria a lista de param
 		List<Type> param = new ArrayList<Type>();
 
 		List<GoParser.ParameterDeclContext> parameterDeclContext = ctx.signature().parameters().parameterDecl();
 		int tam = parameterDeclContext.size();
 
+		AST var_list = new AST(PARAMS_LIST_NODE, exist_idx, NO_TYPE);
 		for(int i = 0; i < tam; i++) {
-//			String tipo = parameterDeclContext.get(i).type_().typeName().IDENTIFIER().getSymbol().getText();
-//			setLastDeclType(tipo);
-			visit(parameterDeclContext.get(i).type_());
+			AST p_node = visit(parameterDeclContext.get(i));
 			param.add(lastDeclType);
+			var_list.addChild(p_node);
 		}
+		root.addChild(var_list);
+		// Detecta o retorno
+		Type returns = NO_TYPE;
+		if (ctx.signature().type_() != null){
+			visit(ctx.signature().type_());
+			returns = lastDeclType;
+		}
+		// Now all the variables created will be inserted on localvt
+		AST block = visit(ctx.block());
+		if (returns != NO_TYPE){
+			for (int i=0; i < block.getSizeChild(); i++){
+				AST child = block.getChild(i);
+				if (child.getKind() == RETURN_NODE && child.getType() != returns){
+					System.out.printf("SEMANTIC ERROR: Return at function %s declared at line %d returns %s but expected %s\n",
+							text, line, child.getType(), returns);
+					System.exit(1);
+				}
+			}
+		}
+		root.addChild(block);
 
+		ft.addFunc(text, line, param, returns, vt);
+		root.setType(returns);
 
-		//cria list retorno
-		visit(ctx.signature().type_());
-		Type returns = lastDeclType;
-		ft.addFunc(text, line, param, returns, new VarTable());
+		// Come back to global vartable;
+		vt = backup;
+		return root;
 
 	}
 
-	AST checkLocalVar(Token token) {
-		String text = token.getText();
-		int line = token.getLine();
-		int idx = localvt.lookupVar(text);
-		if (idx == -1) {
-			System.err.printf("SEMANTIC ERROR (%d): variable '%s' was not declared.\n", line, text);
-			// A partir de agora vou abortar no primeiro erro para facilitar.
-			System.exit(1);
-			return null; // Never reached.
-		}
-		return new AST(VAR_USE_NODE, idx, localvt.getType(idx));
-	}
+//	AST checkLocalVar(Token token) {
+//		String text = token.getText();
+//		int line = token.getLine();
+//		int idx = localvt.lookupVar(text);
+//		if (idx == -1) {
+//			System.err.printf("SEMANTIC ERROR (%d): variable '%s' was not declared.\n", line, text);
+//			// A partir de agora vou abortar no primeiro erro para facilitar.
+//			System.exit(1);
+//			return null; // Never reached.
+//		}
+//		return new AST(VAR_USE_NODE, idx, localvt.getType(idx));
+//	}
 
 	// Cria uma nova variável a partir do dado token.
 	// Retorna um nó do tipo 'var declaration'.
-	AST newLocalVar(Token token) {
-		String text = token.getText();
-		int line = token.getLine();
-		int idx = localvt.lookupVar(text);
-		if (idx != -1) {
-			System.err.printf("SEMANTIC ERROR (%d): variable '%s' already declared at line %d.\n", line, text, vt.getLine(idx));
-			// A partir de agora vou abortar no primeiro erro para facilitar.
-			System.exit(1);
-			return null; // Never reached.
-		}
-		idx = localvt.addVar(text, line, NO_TYPE, -1);
-		return new AST(VAR_DECL_NODE, idx, NO_TYPE);
-	}
+//	AST newLocalVar(Token token) {
+//		String text = token.getText();
+//		int line = token.getLine();
+//		int idx = localvt.lookupVar(text);
+//		if (idx != -1) {
+//			System.err.printf("SEMANTIC ERROR (%d): variable '%s' already declared at line %d.\n", line, text, vt.getLine(idx));
+//			// A partir de agora vou abortar no primeiro erro para facilitar.
+//			System.exit(1);
+//			return null; // Never reached.
+//		}
+//		idx = localvt.addVar(text, line, NO_TYPE, -1);
+//		return new AST(VAR_DECL_NODE, idx, NO_TYPE);
+//	}
 
     // ----------------------------------------------------------------------------
     // Type checking and inference.
@@ -278,7 +290,7 @@ public class SemanticChecker extends GoParserBaseVisitor<AST> {
 		if( type == "console"){
 			AST.printDot(root, vt);
 		} else{
-			AST.printFileDot(root, vt);
+			AST.printFileDot(root, vt, ft);
 		}
     }
 
@@ -298,9 +310,22 @@ public class SemanticChecker extends GoParserBaseVisitor<AST> {
     	// Também é possível usar o iterador da lista aqui mas prefiro esse
     	// estilo de loop clássico...
 
+		//variaveis globais
+		try {
+			int tam = ctx.varDecl().size();
+			for(int i = 0;i < tam;i++){
+				//this.root.addChild();
+				AST child = visit(ctx.varDecl(i));
+				this.root.addChild(child);
+
+			}
+		}
+		catch(Exception decl) {
+			// Se não tiver variavel global
+		}
 		//visita o sourceFile: ((functionDecl) eos)* EOF #funcDeclLoop
     	for (int i = 0; i < ctx.functionDecl().size(); i++) {
-    		AST child = visit(ctx.functionDecl(i));
+			AST child = visit(ctx.functionDecl(i));
     		this.root.addChild(child);
     	}
 	
@@ -316,88 +341,55 @@ public class SemanticChecker extends GoParserBaseVisitor<AST> {
 	}
 
 	//visita a regra functionDecl: FUNC IDENTIFIER (signature block?);
-//	@Override
-//	public AST visitFunctionDecl(FunctionDeclContext ctx) {
-//
-//
-//		AST func = newFunc(ctx.IDENTIFIER().getSymbol()); // Precisa pegar o tipo da funcao
-//
-//		int idx = func.getIntData();
-//		localvt = ft.getVarTable(idx); // Set localvt
-//
-//		AST params = visit(ctx.signature()); // visit return type
-//		func.addChild(params);
-//
-//		// Set type for node and func table
-//		func.setType(lastDeclType);
-//		ft.setRetorno(idx, lastDeclType);
-//
-//		// Backup the global vartable
-//		VarTable backup = vt;
-//		vt = localvt;
-//		// Now all the variables created will be inserted on localvt
-//		AST block = visit(ctx.block());
-//		func.addChild(block);
-//
-//		// Come back to global vartable;
-//		vt = backup;
-//
-//		return func;
-//	}
-//
-//	//	signature:
-//	//	parameters type_?;
-//	public AST visitSignature(GoParser.SignatureContext  ctx){
-//		AST params = visit(ctx.parameters());
-//
-//		if (ctx.type_() != null){
-//			visit(ctx.type_());
-//		} else{
-//			lastDeclType = NO_TYPE;
-//		}
-//		return params;
-//	}
-//
-//	@Override
-//	public AST visitParameters(GoParser.ParametersContext ctx) {
-//
-//		AST params_list = AST.newSubtree(PARAMS_LIST_NODE, NO_TYPE);
-//		int size = ctx.parameterDecl().size();
-////		params_list = new List<Type>(size);
-//		for (int i = 0; i < size; i++) {
-//			AST node = visit(ctx.parameterDecl(i)); // Precisa pegar o tipo da variável
-//			params_list.addChild(node);
-//		}
-//		return params_list;
-//	}
-//
-//	@Override
-//	public AST visitParameterDecl(ParameterDeclContext ctx) {
-//
-//		AST node = newLocalVar(ctx.IDENTIFIER().getSymbol());
-//		visit(ctx.type_());
-//		node.setType(lastDeclType);
-//		return node;
-//	}
-
-	/*
-	//visita a regra block: L_CURLY statementList R_CURLY;
 	@Override
-	public AST visitBlock(BlockContext ctx) {
-		AST block = AST.newSubtree(BLOCK_NODE, NO_TYPE);
-    	
-		AST node = visit(ctx.statementList());
-
-		AST random = AST.newSubtree(VAR_USE_NODE, NO_TYPE);
-		
-		block.addChild(node);
-		block.addChild(random);
-    	
-
-		return block;
-	
+	public AST visitFunctionDecl(FunctionDeclContext ctx) {
+		return newFunc(ctx);
 	}
-	*/
+
+	//	signature:
+	//	parameters type_?;
+	public AST visitSignature(GoParser.SignatureContext  ctx){
+		AST params = visit(ctx.parameters());
+
+		if (ctx.type_() != null){
+			visit(ctx.type_());
+		} else{
+			lastDeclType = NO_TYPE;
+		}
+		return params;
+	}
+
+	@Override
+	public AST visitParameterDecl(ParameterDeclContext ctx) {
+
+		AST node = newVar(ctx.IDENTIFIER().getSymbol());
+		node.setKind(PARAMS_NODE);
+		visit(ctx.type_());
+		node.setType(lastDeclType);
+		vt.setType(node.intData, lastDeclType);
+		return node;
+	}
+
+	@Override
+	public AST visitFunctionCaller(GoParser.FunctionCallerContext ctx){
+		AST node = checkFunc(ctx.IDENTIFIER().getSymbol());
+		// intData of the node is the index of the function in the funcTable
+		AST params = new AST(PARAMS_LIST_NODE, node.intData, NO_TYPE);
+		List<Type> expected_types = ft.getTypes(node.intData);
+		for (int i=0; i < ctx.paramsCaller().expressionList().expression().size(); i++){
+			AST child = visit(ctx.paramsCaller().expressionList().expression(i));
+			if (child.type !=  expected_types.get(i)){
+				System.err.printf("SEMANTIC ERROR (%d): At calling '%s', param[%d] expected type %s but got %s.\n", ctx.getStop().getLine(), ctx.IDENTIFIER().getSymbol().getText(),
+						i, expected_types.get(i).toString(), child.type.toString());
+				System.exit(1);
+				return null;
+			}
+			params.addChild(child);
+
+		}
+		node.addChild(params);
+		return node;
+	}
 
 	@Override
     public AST visitBlock(GoParser.BlockContext ctx){
@@ -435,7 +427,9 @@ public class SemanticChecker extends GoParserBaseVisitor<AST> {
 
 	// Visita a regra varDecl: VAR varSpec ;
     
-
+	public AST visitVarDecl(GoParser.VarDeclContext ctx){
+		return visit(ctx.varSpec());
+	}
 	// varSpec:
 	// identifierList type_ (ASSIGN expressionList)?;
 	// Agora a regra está assim
@@ -779,22 +773,6 @@ public class SemanticChecker extends GoParserBaseVisitor<AST> {
 		return AST.newSubtree(PRINT_NODE, NO_TYPE, exprNode);
 	}
 
-	//paramsCaller: L_PAREN (expression (COMMA expression)* COMMA?)? R_PAREN;
-	@Override
-	public AST visitParamsCaller(GoParser.ParamsCallerContext ctx) {
-		int tam = ctx.expression().size();
-		AST paramsList = AST.newSubtree(PARAMS_LIST_NODE, NO_TYPE);
-
-		for(int i = 0 ; i < tam; i++){
-			AST child = visit(ctx.expression(i));
-			paramsList.addChild(child);
-		}
-
-		return paramsList;
-	}
-
-	
-
 	// Visita as subregra de expression
 	//	expression:
 	//	primaryExpr #primaryExp
@@ -1025,28 +1003,24 @@ public class SemanticChecker extends GoParserBaseVisitor<AST> {
 		return visit(ctx.expression());
 	}
 
-
-	//exoression: funcCaller
-//	@Override
-//	public AST visitFuncCaller(GoParser.FuncCallerContext ctx) {
-//		return visit(ctx.functionCaller());
-//	}
-//
-//	//functionCaller: IDENTIFIER paramsCaller;
-//	//paramsCaller: L_PAREN (IDENTIFIER (COMMA IDENTIFIER)* COMMA?)? R_PAREN;
-//	@Override
-//	public AST visitFunctionCaller(GoParser.FunctionCallerContext ctx) {
-//
-//		// Visita o identificador da esquerda.
-//		Token idToken = ctx.IDENTIFIER().getSymbol();
-//		AST idNode = checkFunc(idToken);
-//		return null;
-//	}
-
-
 	@Override
 	public AST visitStmtBreak(GoParser.StmtBreakContext ctx) {
 		return AST.newSubtree(BREAK_NODE, NO_TYPE);
+	}
+
+	@Override
+	public AST visitReturnStmt(GoParser.ReturnStmtContext ctx){
+		Type tReturn = NO_TYPE;
+		AST node;
+		if (ctx.expression() != null){
+			AST return_node = visit(ctx.expression());
+			tReturn = return_node.type;
+			node = AST.newSubtree(RETURN_NODE, tReturn);
+			node.addChild(return_node);
+		} else{
+			node = AST.newSubtree(RETURN_NODE, tReturn);
+		}
+		return node;
 	}
 	
 

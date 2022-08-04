@@ -12,9 +12,8 @@ options {
 
 //Antigo sourceFile 
 sourceFile:
-	((functionDecl ) eos)* EOF ;
-//	| ((methodDecl) eos)* EOF #methDeclLoop
-//	| (varDecl eos)* EOF #declvarLoop;
+	((functionDecl eos) | (varDecl))* EOF;
+//	| ((methodDecl) eos)* EOF #methDeclLoop;
 
 
 //!MODIFICACAO CANCELADA
@@ -53,7 +52,6 @@ expressionList: expression (COMMA expression)*;
 // DECLARACAO DE FUNCAO
 
 functionDecl: FUNC IDENTIFIER (signature block?);
-
 
 //methodDecl: FUNC receiver IDENTIFIER ( signature block?);
 //
@@ -114,7 +112,7 @@ emptyStmt: EOS | SEMI;
 
 //labeledStmt: IDENTIFIER COLON statement?;
 
-returnStmt: RETURN expressionList?;
+returnStmt: RETURN expression?;
 
 //breakStmt: BREAK;
 
@@ -206,7 +204,7 @@ methodSpec:
 	IDENTIFIER parameters parameters
 	| IDENTIFIER parameters;
 
-functionType: FUNC signature;
+//functionType: FUNC signature;
 // func main()
 // fmt.Println()
 // fmt.Scan()
@@ -215,7 +213,7 @@ functionType: FUNC signature;
 functionCaller: IDENTIFIER paramsCaller;
 
 //parametros da chamada de funcao
-paramsCaller: L_PAREN (expression (COMMA expression)* COMMA?)? R_PAREN;
+paramsCaller: L_PAREN expressionList? R_PAREN;
 
 signature:
 	parameters type_?;

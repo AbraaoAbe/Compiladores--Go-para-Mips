@@ -23,8 +23,8 @@ BIN_PATH=bin
 #DATA=$(ROOT)/tests
 DATA=/home/igor/Desktop/ztests
 IN=$(DATA)
-FILE=$(IN)/simple.go
-OUT=./ast.txt
+FILE=$(IN)/func.go
+OUT=./tree.dot
 
 all: antlr javac
 	@echo "Done."

@@ -61,6 +61,7 @@ public class FuncTable {
 	                 //getName(i), getLine(i), getRetorno(i).toString(), getVarTable(i).toString());
 			f.format("Entry %d -- name: %s, line: %d, retorno: %s\n", i,
 	                 getName(i), getLine(i), getRetorno(i).toString());
+			f.format("|-> Function[%d] %s", i, getVarTable(i).toString());
 		}
 		f.close();
 		return sb.toString();

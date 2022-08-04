@@ -21,7 +21,7 @@ public final class VarTable {
 		}
 		return -1;
 	}
-	
+
 	public int addVar(String s, int line, Type type, int tam_array) {
 		Entry entry = new Entry(s, line, type, tam_array);
 		int idxAdded = table.size();
@@ -58,10 +58,10 @@ public final class VarTable {
 		f.format("Variables table:\n");
 		for (int i = 0; i < table.size(); i++) {
 			if (getTamArr(i) == -1) {
-				f.format("Entry %d -- name: %s, line: %d, type: %s\n", i,
+				f.format("Var %d -- name: %s, line: %d, type: %s\n", i,
 						getName(i), getLine(i), getType(i).toString());
 			} else{
-				f.format("Entry %d -- name: %s, line: %d, type: %s, tam_array: %s\n", i,
+				f.format("Var %d -- name: %s, line: %d, type: %s, tam_array: %s\n", i,
 						getName(i), getLine(i), getType(i).toString(), getTamArr(i));
 			}
 		}

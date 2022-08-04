@@ -128,9 +128,9 @@ public enum NodeKind {
             return "func_use";
         }
 	},
-    FUNC_CALL_NODE {
+    RETURN_NODE {
 		public String toString() {
-            return "func_call";
+            return "return";
         }
 	},
     PARAMS_LIST_NODE { // Type conversion.
