@@ -12,7 +12,7 @@ options {
 
 //Antigo sourceFile 
 sourceFile:
-	((functionDecl eos) | (varDecl))* EOF;
+	((functionDecl eos) | (varDecl) | assignment )* EOF;
 //	| ((methodDecl) eos)* EOF #methDeclLoop;
 
 
