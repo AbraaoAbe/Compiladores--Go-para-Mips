@@ -144,19 +144,20 @@ public final class CodeGen extends ASTBaseVisitor<Integer> {
 	// Funcionamento dos visitadores abaixo deve ser razoavelmente explicativo
 	// neste final do curso...
 	
-	// @Override
-	// protected Integer visitAssign(AST node) {
-	// 	AST r = node.getChild(1);
-	//     int x = visit(r);
-	//     int addr = node.getChild(0).intData;
-	//     Type varType = vt.getType(addr);
-	//     if (varType == FLOAT_TYPE) {
-	//         emit(STWf, addr, x);
-	//     } else { // All other types, include ints, bools and strs.
-	//         emit(STWi, addr, x);
-	//     }
-	//     return -1; // This is not an expression, hence no value to return.
-	// }
+    // assign_stmt: ID ASSIGN expr SEMI
+	@Override
+	protected Integer visitAssign(AST node) {
+		AST r = node.getChild(1);
+	    int x = visit(r);
+	    int addr = node.getChild(0).intData;
+	    Type varType = vt.getType(addr);
+	    if (varType == FLOAT_TYPE) {
+	        emit(STWf, addr, x);
+	    } else { // All other types, include ints, bools and strs.
+	        emit(STWi, addr, x);
+	    }
+	    return -1; // This is not an expression, hence no value to return.
+	}
 
 	// @Override
 	// protected Integer visitEq(AST node) {
@@ -222,13 +223,13 @@ public final class CodeGen extends ASTBaseVisitor<Integer> {
 	//     return -1; // This is not an expression, hence no value to return.
 	// }
 
-	// @Override
-	// protected Integer visitIntVal(AST node) {
-	// 	int x = newIntReg();
-	//     int c = node.intData;
-	//     emit(LDIi, x, c);
-	//     return x;
-	// }
+	@Override
+	protected Integer visitIntVal(AST node) {
+		int x = newIntReg();
+	    int c = node.intData;
+	    emit(LDIi, x, c);
+	    return x;
+	}
 
 	// // @Override
 	// // protected Integer visitLt(AST node) {
@@ -277,33 +278,36 @@ public final class CodeGen extends ASTBaseVisitor<Integer> {
 	//     return x;
 	// }
 
-	// @Override
-	// protected Integer visitPlus(AST node) {
-	// 	int x;
-	//     int y = visit(node.getChild(0));
-	//     int z = visit(node.getChild(1));
-	//     if (node.type == FLOAT_TYPE) {
-	//         x = newFloatReg();
-	//         emit(ADDf, x, y, z);
-	//     } else if (node.type == INT_TYPE) {
-	//     	x = newIntReg();
-	//         emit(ADDi, x, y, z);
-	//     } else if (node.type == BOOL_TYPE) {
-	//     	x = newIntReg();
-	//         emit(OROR, x, y, z);
-	//     } else { // Must be STR_TYPE
-	//     	x = newIntReg();
-	//         emit(CATs, x, y, z);
-	//     }
-	//     return x;
-	// }
+	@Override
+	protected Integer visitPlus(AST node) {
+		int x;
+	    int y = visit(node.getChild(0));
+	    int z = visit(node.getChild(1));
+	    if (node.type == FLOAT_TYPE) {
+	        x = newFloatReg();
+	        emit(ADDf, x, y, z);
+	    } else if (node.type == INT_TYPE) {
+	    	x = newIntReg();
+	        emit(ADDi, x, y, z);
+	    } else if (node.type == BOOL_TYPE) {
+	    	x = newIntReg();
+	        emit(OROR, x, y, z);
+	    } else { // Must be STR_TYPE
+	    	x = newIntReg();
+	        emit(CATs, x, y, z);
+	    }
+	    return x;
+	}
 
-	// @Override
-	// protected Integer visitProgram(AST node) {
-	// 	visit(node.getChild(0)); // var_list
-	// 	visit(node.getChild(1)); // block
-	//     return -1;  // This is not an expression, hence no value to return.
-	// }
+	@Override
+	protected Integer visitProgram(AST node) {
+        for (int i = 0; i < node.getChildCount(); i++) {
+            visit(node.getChild(i));    
+        }
+		//visit(node.getChild(0)); // var_list
+		//visit(node.getChild(1)); // block
+	    return -1;  // This is not an expression, hence no value to return.
+	}
 
 	// @Override
 	// protected Integer visitScan(AST node) {
@@ -373,31 +377,31 @@ public final class CodeGen extends ASTBaseVisitor<Integer> {
 	//     return x;
 	// }
 
-	// @Override
-	// protected Integer visitVarDecl(AST node) {
-	// 	// Nothing to do here.
-	//     return -1;  // This is not an expression, hence no value to return.
-	// }
+	@Override
+	protected Integer visitVarDecl(AST node) {
+		// Nothing to do here.
+	    return -1;  // This is not an expression, hence no value to return.
+	}
 
-	// @Override
-	// protected Integer visitVarList(AST node) {
-	// 	// Nothing to do here.
-	//     return -1;  // This is not an expression, hence no value to return.
-	// }
+	@Override
+	protected Integer visitVarList(AST node) {
+		// Nothing to do here.
+	    return -1;  // This is not an expression, hence no value to return.
+	}
 
-	// @Override
-	// protected Integer visitVarUse(AST node) {
-	// 	int addr = node.intData;
-	//     int x;
-	//     if (node.type == FLOAT_TYPE) {
-	//         x = newFloatReg();
-	//         emit(LDWf, x, addr);
-	//     } else {
-	//         x = newIntReg();
-	//         emit(LDWi, x, addr);
-	//     }
-	//     return x;
-	// }
+	@Override
+	protected Integer visitVarUse(AST node) {
+		int addr = node.intData;
+	    int x;
+	    if (node.type == FLOAT_TYPE) {
+	        x = newFloatReg();
+	        emit(LDWf, x, addr);
+	    } else {
+	        x = newIntReg();
+	        emit(LDWi, x, addr);
+	    }
+	    return x;
+	}
 
 	// @Override
 	// protected Integer visitPrint(AST node) {
@@ -461,6 +465,13 @@ public final class CodeGen extends ASTBaseVisitor<Integer> {
 	//     int y = visit(node.getChild(0));
 	//     emit(R2Ss, x, y);
 	//     return x;
+	// }
+
+    // @Override
+	// protected Integer visitFunc_Decl(AST node) {
+	// 	visit(node.getChild(0)); // var_list
+	// 	visit(node.getChild(1)); // block
+	//     return -1;  // This is not an expression, hence no value to return.
 	// }
 
 }

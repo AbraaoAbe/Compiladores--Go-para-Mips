@@ -89,8 +89,8 @@ import java.util.Objects;
  */
 public class SemanticChecker extends GoParserBaseVisitor<AST> {
 
-	private StrTable st = new StrTable();   // Tabela de strings.
-    private VarTable vt = new VarTable();   // Tabela de variáveis.
+	public StrTable st = new StrTable();   // Tabela de strings.
+    public VarTable vt = new VarTable();   // Tabela de variáveis.
 	private FuncTable ft = new FuncTable();
 	private VarTable localvt;
 	private List<Type> list_params;
@@ -294,6 +294,11 @@ public class SemanticChecker extends GoParserBaseVisitor<AST> {
 		}
     }
 
+	// Retorna a AST construída ao final da análise.
+    public AST getAST() {
+    	return this.root;
+    }
+
     // ----------------------------------------------------------------------------
     // Visitadores.
 	
@@ -326,6 +331,11 @@ public class SemanticChecker extends GoParserBaseVisitor<AST> {
 		//visita o sourceFile: ((functionDecl) eos)* EOF #funcDeclLoop
     	for (int i = 0; i < ctx.functionDecl().size(); i++) {
 			AST child = visit(ctx.functionDecl(i));
+    		this.root.addChild(child);
+    	}
+		//visita o sourceFile: ((assignment))* 
+		for (int i = 0; i < ctx.assignment().size(); i++) {
+			AST child = visit(ctx.assignment(i));
     		this.root.addChild(child);
     	}
 	

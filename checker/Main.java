@@ -10,6 +10,9 @@ import org.antlr.v4.runtime.tree.ParseTree;
 import parser.GoLexer;
 import parser.GoParser;
 
+import checker.SemanticChecker;
+import code.CodeGen;
+
 public class Main {
 
 	/*
@@ -53,6 +56,10 @@ public class Main {
 		System.out.println("PARSE SUCCESSFUL!");
 		checker.printTables();
 		checker.printAST("file");
+
+		// Executa o gerador de código.
+		CodeGen codeGen = new CodeGen(checker.st, checker.vt);
+		codeGen.execute(checker.getAST());
 	}
 
 }
