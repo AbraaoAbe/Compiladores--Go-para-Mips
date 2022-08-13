@@ -41,6 +41,13 @@ import tables.StrTable;
 import tables.VarTable;
 import typing.Type;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.HashMap;
+import java.util.Map;
+
 /*
  * Visitador da AST para geração básica de código. Funciona de
  * forma muito similar ao interpretador do laboratório anterior,
@@ -56,6 +63,15 @@ public final class CodeGen extends ASTBaseVisitor<Integer> {
 	private final Instruction code[]; // Code memory
 	private final StrTable st;
 	private final VarTable vt;
+	private PrintWriter pw;
+	private static Map<String, Integer> primitiveSizes;
+	static {
+		primitiveSizes = new HashMap<>();
+		primitiveSizes.put("int", 4);
+		primitiveSizes.put("float", 4);
+		primitiveSizes.put("char", 1);
+		primitiveSizes.put("bool", 1);
+	}
 	
 	// Contadores para geração de código.
 	// Próxima posição na memória de código para emit.
@@ -67,10 +83,11 @@ public final class CodeGen extends ASTBaseVisitor<Integer> {
 	private static int intRegsCount;
 	private static int floatRegsCount;
 	
-	public CodeGen(StrTable st, VarTable vt) {
+	public CodeGen(StrTable st, VarTable vt, String file_target) throws IOException {
 		this.code = new Instruction[INSTR_MEM_SIZE];
 		this.st = st;
 		this.vt = vt;
+		this.pw = new PrintWriter(new FileWriter(file_target));
 	}
 	
 	// Função principal para geração de código.
@@ -81,24 +98,47 @@ public final class CodeGen extends ASTBaseVisitor<Integer> {
 		floatRegsCount = 0;
 	    dumpStrTable();
 	    visit(root);
-	    emit(HALT);
+//	    emit(HALT);
 	    dumpProgram();
+		pw.close();
 	}
 	
 	// ----------------------------------------------------------------------------
 	// Prints ---------------------------------------------------------------------
 
 	void dumpProgram() {
+
+		pw.printf("\n.text\n");
 	    for (int addr = 0; addr < nextInstr; addr++) {
-	    	System.out.printf("%s\n", code[addr].toString());
+	    	pw.printf("%s\n", code[addr].toString());
 	    }
+		pw.printf("syscall");
 	}
 
 	void dumpStrTable() {
+		pw.printf(".data\n");
+		pw.printf("# Declare the statics strings\n");
 	    for (int i = 0; i < st.size(); i++) {
-	        System.out.printf("SSTR %s\n", st.get(i));
+	        pw.printf("str%d: .asciiz %s\n", i, st.get(i));
 	    }
 	}
+
+//	void dumpVarTable() {
+//		pw.printf("# Declare the global variables strings\n");
+//		for (int i = 0; i < vt.size(); i++) {
+//			Type t = vt.getType(i);
+//			boolean isArray = vt.getTamArr(i) > 0;
+//			if (isArray){
+//				alocateArray(vt, i);
+//			} else if (t == INT_TYPE) {
+//				alocateInt(vt, i);
+//			} else if (t == FLOAT_TYPE) {
+//				alocateFloat(vt, i);
+//			} else if (t == BOOL_TYPE) {
+//				alocateBool(vt, i);
+//			}
+//		}
+//	}
 	
 	// ----------------------------------------------------------------------------
 	// Emits ----------------------------------------------------------------------
@@ -473,5 +513,30 @@ public final class CodeGen extends ASTBaseVisitor<Integer> {
 	// 	visit(node.getChild(1)); // block
 	//     return -1;  // This is not an expression, hence no value to return.
 	// }
+//	private void alocateArray(VarTable table, int i){
+//		int space_alloc = table.getTamArr(i) *
+//				primitiveSizes.get(table.getType(i).toString());
+//		pw.printf("array%d:	.space %d", i, space_alloc);
+//	}
+//
+//	private void alocateInt(VarTable table, int i){
+//		int space_alloc = primitiveSizes.get(table.getType(i).toString());
+//		pw.printf("varInt%d:	.space %d", i, space_alloc);
+//	}
+//
+//	private void alocateBool(VarTable table, int i){
+//		int space_alloc = primitiveSizes.get(table.getType(i).toString());
+//		pw.printf("varBool%d:	.space %d", i, space_alloc);
+//	}
+//
+//	private void alocateFloat(VarTable table, int i) {
+//		int space_alloc = primitiveSizes.get(table.getType(i).toString());
+//		pw.printf("varFloat%d:	.float", i);
+//	}
 
+//	private void alocateString(VarTable table, int i){
+//		int space_alloc = table.getTamArr(i) *
+//				primitiveSizes.get(table.getType(i).toString());
+//		pw.printf("array%d:	.space %d", i, space_alloc);
+//	}
 }

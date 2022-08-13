@@ -56,7 +56,7 @@ public enum OpCode {
     LDWi("LDWi", 2), 	// LDWi ix, addr	; ix <- data_mem[addr]
     LDWf("LDWf", 2), 	// LDWf fx, addr	; fx <- data_mem[addr]
     // Load immediate (constant)
-    LDIi("LDIi", 2), 	// LDIi ix, int_const	; ix <- int_const
+    LDIi("li", 2), 	// LDIi ix, int_const	; ix <- int_const
     LDIf("LDIf", 2),  	// LDIf fx, float_const	; fx <- float_const (must be inside an int)
     // Store word (to address)
     STWi("STWi", 2),  	// STWi addr, ix		; data_mem[addr] <- ix

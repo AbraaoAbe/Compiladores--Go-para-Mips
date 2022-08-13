@@ -25,13 +25,8 @@ public abstract class ASTBaseVisitor<T> {
 	protected T visit(AST node) {
 		switch(node.kind) {
 	        case ASSIGN_NODE:           return visitAssign(node);
-	        // case EQ_NODE:               return visitEq(node);
-	        // case BLOCK_NODE:            return visitBlock(node);
-	        // case BOOL_VAL_NODE:         return visitBoolVal(node);
-	        // case IF_NODE:               return visitIf(node);
-            // case FOR_NODE:              return visitFor(node);
-	        case INT_VAL_NODE:          return visitIntVal(node);
-	        // case MINUS_NODE:            return visitMinus(node);
+			case INT_VAL_NODE:          return visitIntVal(node);
+//	        case MINUS_NODE:            return visitMinus(node);
 	        // case DIV_NODE:              return visitDiv(node);
             // case MOD_NODE:              return visitMod(node);
 	        case PLUS_NODE:             return visitPlus(node);

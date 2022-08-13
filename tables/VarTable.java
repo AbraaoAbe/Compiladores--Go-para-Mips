@@ -28,6 +28,10 @@ public final class VarTable {
 		table.add(entry);
 		return idxAdded;
 	}
+
+	public int size(){
+		return table.size();
+	}
 	
 	public String getName(int i) {
 		return table.get(i).name;

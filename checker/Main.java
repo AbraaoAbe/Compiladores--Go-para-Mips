@@ -58,7 +58,7 @@ public class Main {
 		checker.printAST("file");
 
 		// Executa o gerador de código.
-		CodeGen codeGen = new CodeGen(checker.st, checker.vt);
+		CodeGen codeGen = new CodeGen(checker.st, checker.vt, "./code.asm");
 		codeGen.execute(checker.getAST());
 	}
 
