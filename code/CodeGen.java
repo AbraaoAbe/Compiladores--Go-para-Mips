@@ -153,7 +153,7 @@ public final class CodeGen extends ASTBaseVisitor<Integer> {
 	// ----------------------------------------------------------------------------
 	// Emits ----------------------------------------------------------------------
 	
-	private void emit(OpCode op, int o1, int o2, int o3) {
+	private void emit(OpCode op, String o1, String o2, String o3) {
 		Instruction instr = new Instruction(op, o1, o2, o3);
 		// Em um código para o produção deveria haver uma verificação aqui...
 	    code[nextInstr] = instr;
@@ -161,38 +161,44 @@ public final class CodeGen extends ASTBaseVisitor<Integer> {
 	}
 	
 	private void emit(OpCode op) {
-		emit(op, 0, 0, 0);
+		emit(op, "", "", "");
 	}
 	
-	private void emit(OpCode op, int o1) {
-		emit(op, o1, 0, 0);
+	private void emit(OpCode op, String o1) {
+		emit(op, o1, "", "");
 	}
 	
-	private void emit(OpCode op, int o1, int o2) {
-		emit(op, o1, o2, 0);
+	private void emit(OpCode op, String o1, String o2) {
+		emit(op, o1, o2, "");
 	}
 
 	private void backpatchJump(int instrAddr, int jumpAddr) {
-	    code[instrAddr].o1 = jumpAddr;
+	    code[instrAddr].o1 = String.valueOf(jumpAddr);
 	}
 
 	private void backpatchBranch(int instrAddr, int offset) {
-	    code[instrAddr].o2 = offset;
+	    code[instrAddr].o2 = String.valueOf(offset);
 	}
 	
 	// ----------------------------------------------------------------------------
 	// AST Traversal --------------------------------------------------------------
 	
-	private int newIntReg() {
-		return intRegsCount++; 
+	private String newIntReg() {
+		String s = String.valueOf(intRegsCount);
+		intRegsCount++;
+		return s; 
 	}
 
-	private int newIntReg_T() {
-		return 8 + (intRegs_T_count++); 
+	private String newIntReg_T() {
+		String s = String.valueOf(intRegs_T_count + 8);
+		intRegs_T_count++;
+		return s;  
 	}
     
-	private int newFloatReg() {
-		return floatRegsCount++;
+	private String newFloatReg() {
+		String s = String.valueOf(floatRegsCount);
+		floatRegsCount++;
+		return s;
 	}
 	
 	// Funcionamento dos visitadores abaixo deve ser razoavelmente explicativo
@@ -202,17 +208,17 @@ public final class CodeGen extends ASTBaseVisitor<Integer> {
 	@Override
 	protected Integer visitAssign(AST node) {
 		AST varuse = node.getChild(0);
-		visit(varuse);
+		int reg = visit(varuse);
 		AST r = node.getChild(1);
-	    int x = visit(r);
-		//System.out.print(x);
+	    String x = String.valueOf(visit(r));
+		System.out.print(reg);
 	    int addr = node.getChild(0).intData;
 	    Type varType = vt.getType(addr);
 	    if (varType == FLOAT_TYPE) {
-	        emit(STWf, addr, x);
+	        emit(STWf, String.valueOf(addr), x);
 	    } else { // All other types, include ints, bools and strs.
 			//System.out.print("( "+addr+ " )");
-	        emit(OpCode.SW, addr, x);
+	        emit(OpCode.SW, String.valueOf(reg), x);
 	    }
 	    return -1; // This is not an expression, hence no value to return.
 	}
@@ -283,10 +289,10 @@ public final class CodeGen extends ASTBaseVisitor<Integer> {
 
 	@Override
 	protected Integer visitIntVal(AST node) {
-		int x = newIntReg();
+		String x = newIntReg();
 	    int c = node.intData;
-	    emit(OpCode.LI, x, c);
-	    return x;
+	    emit(OpCode.LI, x, String.valueOf(c));
+	    return Integer.valueOf(x);
 	}
 
 	// // @Override
@@ -338,9 +344,9 @@ public final class CodeGen extends ASTBaseVisitor<Integer> {
 
 	@Override
 	protected Integer visitPlus(AST node) {
-		int x;
-	    int y = visit(node.getChild(0));
-	    int z = visit(node.getChild(1));
+		String x;
+	    String y = String.valueOf(visit(node.getChild(0)));
+	    String z = String.valueOf(visit(node.getChild(1)));
 	    if (node.type == FLOAT_TYPE) {
 	        x = newFloatReg();
 	        emit(OpCode.ADD, x, y, z);
@@ -354,7 +360,8 @@ public final class CodeGen extends ASTBaseVisitor<Integer> {
 	    	x = newIntReg();
 	        emit(CATs, x, y, z);
 	    }
-	    return x;
+
+	    return Integer.valueOf(x);
 	}
 
 	@Override
@@ -449,17 +456,18 @@ public final class CodeGen extends ASTBaseVisitor<Integer> {
 
 	@Override
 	protected Integer visitVarUse(AST node) {
-		int addr = node.intData;
-	    int x;
+		String addr = String.valueOf(node.intData);
+	    String x;
+		String name = vt.getName(node.intData);
 	    if (node.type == FLOAT_TYPE) {
 	        x = newFloatReg();
 	        emit(LDWf, x, addr);
 	    } else {
 	        //x = newIntReg();
 			x = newIntReg_T();
-	        emit(OpCode.LDW, x, addr);
+	        emit(OpCode.LDW, x, name);
 	    }
-	    return x;
+	    return Integer.valueOf(x);
 	}
 
 	// @Override
