@@ -81,6 +81,9 @@ public final class CodeGen extends ASTBaseVisitor<Integer> {
 	// fazer o processo de alocação de registradores. Isto está
 	// fora do escopo da disciplina.
 	private static int intRegsCount;
+	private static int intRegs_A_count;
+	private static int intRegs_T_count;
+	private static int intRegs_S_count;
 	private static int floatRegsCount;
 	
 	public CodeGen(StrTable st, VarTable vt, String file_target) throws IOException {
@@ -95,10 +98,14 @@ public final class CodeGen extends ASTBaseVisitor<Integer> {
 	public void execute(AST root) {
 		nextInstr = 0;
 		intRegsCount = 0;
+		intRegs_A_count = 0;
+	 	intRegs_T_count = 0;
+		intRegs_S_count = 0;
+		//utilizado como temporario +4 na impressão
 		floatRegsCount = 0;
 	    dumpStrTable();
+		dumpVarTable();
 	    visit(root);
-//	    emit(HALT);
 	    dumpProgram();
 		pw.close();
 	}
@@ -112,7 +119,8 @@ public final class CodeGen extends ASTBaseVisitor<Integer> {
 	    for (int addr = 0; addr < nextInstr; addr++) {
 	    	pw.printf("%s\n", code[addr].toString());
 	    }
-		pw.printf("li $v0, 10\n");
+		//termino do programa
+		pw.printf("li $2, 10\n");
 		pw.printf("syscall");
 	}
 
@@ -124,22 +132,23 @@ public final class CodeGen extends ASTBaseVisitor<Integer> {
 	    }
 	}
 
-//	void dumpVarTable() {
-//		pw.printf("# Declare the global variables strings\n");
-//		for (int i = 0; i < vt.size(); i++) {
-//			Type t = vt.getType(i);
-//			boolean isArray = vt.getTamArr(i) > 0;
-//			if (isArray){
-//				alocateArray(vt, i);
-//			} else if (t == INT_TYPE) {
-//				alocateInt(vt, i);
-//			} else if (t == FLOAT_TYPE) {
-//				alocateFloat(vt, i);
-//			} else if (t == BOOL_TYPE) {
-//				alocateBool(vt, i);
-//			}
-//		}
-//	}
+	void dumpVarTable() {
+		pw.printf("# Declare the global variables strings\n");
+		for (int i = 0; i < vt.size(); i++) {
+			Type t = vt.getType(i);
+			boolean isArray = vt.getTamArr(i) > 0;
+			if (isArray){
+				//alocateArray(vt, i);
+			} else if (t == INT_TYPE) {
+				alocateInt(vt, i);
+			} 
+			//else if (t == FLOAT_TYPE) {
+			// 	alocateFloat(vt, i);
+			// } else if (t == BOOL_TYPE) {
+			// 	alocateBool(vt, i);
+			// }
+		}
+	}
 	
 	// ----------------------------------------------------------------------------
 	// Emits ----------------------------------------------------------------------
@@ -177,6 +186,10 @@ public final class CodeGen extends ASTBaseVisitor<Integer> {
 	private int newIntReg() {
 		return intRegsCount++; 
 	}
+
+	private int newIntReg_T() {
+		return 8 + (intRegs_T_count++); 
+	}
     
 	private int newFloatReg() {
 		return floatRegsCount++;
@@ -188,15 +201,17 @@ public final class CodeGen extends ASTBaseVisitor<Integer> {
     // assign_stmt: ID ASSIGN expr SEMI
 	@Override
 	protected Integer visitAssign(AST node) {
+		AST varuse = node.getChild(0);
+		visit(varuse);
 		AST r = node.getChild(1);
 	    int x = visit(r);
-		System.out.print(x);
+		//System.out.print(x);
 	    int addr = node.getChild(0).intData;
 	    Type varType = vt.getType(addr);
 	    if (varType == FLOAT_TYPE) {
 	        emit(STWf, addr, x);
 	    } else { // All other types, include ints, bools and strs.
-			System.out.print("( "+addr+ " )");
+			//System.out.print("( "+addr+ " )");
 	        emit(OpCode.SW, addr, x);
 	    }
 	    return -1; // This is not an expression, hence no value to return.
@@ -270,7 +285,7 @@ public final class CodeGen extends ASTBaseVisitor<Integer> {
 	protected Integer visitIntVal(AST node) {
 		int x = newIntReg();
 	    int c = node.intData;
-	    emit(OpCode.LDW, x, c);
+	    emit(OpCode.LI, x, c);
 	    return x;
 	}
 
@@ -440,8 +455,9 @@ public final class CodeGen extends ASTBaseVisitor<Integer> {
 	        x = newFloatReg();
 	        emit(LDWf, x, addr);
 	    } else {
-	        x = newIntReg();
-	        emit(LDWi, x, addr);
+	        //x = newIntReg();
+			x = newIntReg_T();
+	        emit(OpCode.LDW, x, addr);
 	    }
 	    return x;
 	}
@@ -522,10 +538,9 @@ public final class CodeGen extends ASTBaseVisitor<Integer> {
 //		pw.printf("array%d:	.space %d", i, space_alloc);
 //	}
 //
-//	private void alocateInt(VarTable table, int i){
-//		int space_alloc = primitiveSizes.get(table.getType(i).toString());
-//		pw.printf("varInt%d:	.space %d", i, space_alloc);
-//	}
+	private void alocateInt(VarTable table, int i){
+		pw.printf("%s:	.word 0", table.getName(i));
+	}
 //
 //	private void alocateBool(VarTable table, int i){
 //		int space_alloc = primitiveSizes.get(table.getType(i).toString());

@@ -29,7 +29,7 @@ public final class Instruction {
 		if (this.op.opCount == 1) {
 			f.format(" %d", this.o1);
 		} else if (this.op.opCount == 2) {
-			f.format(" $%s%d, %d", this.t1, this.o1, this.o2);
+			f.format(" $%d, %d", this.o1, this.o2);
 		} else if (this.op.opCount == 3) {
 			f.format(" %d, %d, %d", this.o1, this.o2, this.o3);
 		}
