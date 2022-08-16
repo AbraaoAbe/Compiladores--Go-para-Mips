@@ -12,9 +12,17 @@ public enum OpCode {
     NOOP("NOOP", 0),
 
     // ---------------------------------------------------
-    // Arith ops
-    
-    ADDi("ADDi", 3),	// ADDi ix, iy, iz	; ix <- iy + iz
+    // Arith ops MIPS
+    ADD("add", 3),	// add $1, $2, $3	; $1 <- $2 + $3
+    ADDi("addi", 3),	// addi $1, $2, int	; $1 <- $2 + int
+    SUB("sub", 3),	// sub $1, $2, $3	; $1 <- $2 - $3
+    //SUBf("SUBf", 3),	// SUBf fx, fy, fz	; fx <- fy - fz
+    MUL("mul", 3),	// mul $1,$2,$3     ; $1 <- $2 * $3
+    MULt("mult", 2),	// mult $2,$3	; $hi,$low <- $2*$3; upper 32 bits stored in hi; lower 32 bits stored in low
+    DIV("div", 3),	// div $2,$3	; $hi,$low <- $2/$3; remainder stored in hi: quocient stored in low;
+    //DIVf("DIVf", 3),	// DIVf fx, fy, fz	; fx <- fy / fz
+
+    //ADDi("ADDi", 3),	// ADDi ix, iy, iz	; ix <- iy + iz
     ADDf("ADDf", 3),	// ADDf fx, fy, fz	; fx <- fy + fz
     SUBi("SUBi", 3),	// SUBi ix, iy, iz	; ix <- iy - iz
     SUBf("SUBf", 3),	// SUBf fx, fy, fz	; fx <- fy - fz
@@ -26,8 +34,16 @@ public enum OpCode {
     WIDf("WIDf", 2),	// WIDf fx, iy		; fx <- (float) iy
 
     // ---------------------------------------------------
-    // Logic ops
-    
+    // Logic ops MIPS
+    AND("and", 3),       // and $1,$2,$3     ; $1 <- $2 & $3
+    ANDi("and", 3),      // andi $1,$2,100   ; $1 <- $2 & 100
+    OR("or", 3),         // or $1,$2,$3      ; $1 <- $2 | $3
+    ORi("ori", 3),       // ori $1,$2,100    ; $1 <- $2 | 100
+
+    // Comparsion
+    SLT("slt", 3),    //slt $1,$2,$3 ; if($2 < $3) $1 <- 1; else $1 <- 0
+    SLTi("slti", 3),  //slti $1,$2,100 ; if($2 < 100) $1 <- 1; else $1 <- 0
+
     // Logical OR
     OROR("OROR", 3), 	// OROR ix, iy, iz	; ix <- (bool) iy || (bool) iz
     // Equality
@@ -41,6 +57,21 @@ public enum OpCode {
 
     // ---------------------------------------------------
     // Branches and jumps
+
+    // Jumps
+    JMP("j", 1),	    // j 1000		; go to address 1000
+    JMPr("jr", 1),	// jr $1        ; go to address stored in $1
+    JMPal("jal", 1), // jal 1000     ; $ra=PC+4; go to address 1000
+    
+    // Branch on equal/not equal
+    BEQ("beq", 2), 	// beq $1,$2,Label    ; if($1 == $2) go to Label
+    BNE("bne", 2), 	// bne $1,$2,Label    ; if($1 != $2) go to Label 
+    // Branch on greater/less
+    BGT("bgt", 2), 	// bgt $1,$2,Label    ; if($1 > $2) go to Label
+    BLT("blt", 2), 	// blt $1,$2,Label    ; if($1 < $2) go to Label
+    // Branch on greater/less than or equal
+    BGE("bge", 2), 	// bge $1,$2,Label    ; if($1 >= $2) go to Label
+    BLE("ble", 2), 	// ble $1,$2,Label    ; if($1 <= $2) go to Label
     
     // Absolute jump
     JUMP("JUMP", 1),	// JUMP addr		; PC <- addr
@@ -50,7 +81,23 @@ public enum OpCode {
     BOFb("BOFb", 2),	// BOFb ix, off		; PC <- PC + off, if ix == 0
 
     // ---------------------------------------------------
-    // Loads and stores
+    // Loads, stores and moves for MIPS
+    
+    // Load word (from address or label)
+    LDW("lw", 2), 	// lw $1, 100($2)	; $1 <- Memory[$2+100]
+    LA("la", 2),     //la $1, label  ; $1 <- Address of label
+    
+    //Load immediate (constant)
+    LI("li", 2), 	//li $1,100     ; $1 <- 100
+
+    // Store word (to address)
+    SW("sw", 2),  	// sw $1,100($2); Memory[$2+100] <- $1
+
+    // Moves
+    MV("move", 2),  	// move $1,$2;   $1 <- $2
+    MVFH("mfhi", 1), // mfhi $2;      $2 <- hi 
+    MVFL("mflo", 1), // mflo $2;      $2 <- lo
+
 
     // Load word (from address)
     LDWi("LDWi", 2), 	// LDWi ix, addr	; ix <- data_mem[addr]
@@ -86,24 +133,28 @@ public enum OpCode {
 
     // ---------------------------------------------------
     // System calls, for I/O (see below)
-    
+    SYCL("syscall", 1), //syscall
+
     CALL("CALL", 2); // CALL code, x
 	
 	// CALL (very basic simulation of OS system calls)
-	// . code: sets the operation to be called.
+	// . code: in &v0 sets the operation to be called.
 	// . x: register involved in the operation.
 	// List of calls:
 	// ----------------------------------------------------------------------------
 	// code | x  | Description
+    // in $v0
 	// ----------- -----------------------------------------------------------
-	// 0   | ix | Read int:   register ix <- int  from stdin
-	// 1   | fx | Read real:  register fx <- real from stdin
-	// 2   | ix | Read bool:  register ix <- bool from stdin (as int)
-	// 3   | ix | Read str:   str_tab[ix] <- str from stdin
-	// 4   | ix | Write int:  stdout <- register ix (as str)
-	// 5   | fx | Write real: stdout <- register fx (as str)
-	// 6   | ix | Write bool: stdout <- register ix (as str)
-	// 7   | ix | Write str:  stdout <- str_tab[ix]
+	// 1   | $a0  | Print integer number (32 bit): $a0 = integer to be printed
+	// 2   | $f12 | Print floating-point number (32 bit): $f12 = float to be printed
+	// 3   | $f12 | Print floating-point number (64 bit): $f12 = float to be printed
+	// 4   | $a0  | Print string: $a0 = address of string in memory to be printed
+	// 5   | $v0  | Read integer:  Integer returned in $v0
+	// 6   | $f0  | Read floating-point (32 bit): Float returned in $f0
+	// 7   | $f0  | Read floating-point (64 bit): Float returned in $f0
+	// 8   | $a0  | Read str: $a0 = memory address of string input buffer 
+    //                    $a1 = length of string buffer (n)
+    // 10  | $f0  | Read floating-point (64 bit): Float returned in $f0
 	// ----------------------------------------------------------------------------
 	// OBS.: All strings in memory are null ('\0') terminated, like in C.
 	// ----------------------------------------------------------------------------
