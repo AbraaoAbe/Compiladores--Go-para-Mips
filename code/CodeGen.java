@@ -1,14 +1,14 @@
 package code;
 
 import static code.Instruction.INSTR_MEM_SIZE;
-import static code.OpCode.ADDf;
+// import static code.OpCode.ADDf;
 import static code.OpCode.ADDi;
 import static code.OpCode.B2Ss;
 import static code.OpCode.BOFb;
 import static code.OpCode.CALL;
 import static code.OpCode.CATs;
-import static code.OpCode.DIVf;
-import static code.OpCode.DIVi;
+// import static code.OpCode.DIVf;
+// import static code.OpCode.DIVi;
 import static code.OpCode.EQUf;
 import static code.OpCode.EQUi;
 import static code.OpCode.EQUs;
@@ -22,14 +22,14 @@ import static code.OpCode.LDWi;
 import static code.OpCode.LTHf;
 import static code.OpCode.LTHi;
 import static code.OpCode.LTHs;
-import static code.OpCode.MULf;
-import static code.OpCode.MULi;
+// import static code.OpCode.MULf;
+// import static code.OpCode.MULi;
 import static code.OpCode.OROR;
 import static code.OpCode.R2Ss;
 import static code.OpCode.STWf;
 import static code.OpCode.STWi;
-import static code.OpCode.SUBf;
-import static code.OpCode.SUBi;
+// import static code.OpCode.SUBf;
+// import static code.OpCode.SUBi;
 import static code.OpCode.WIDf;
 import static typing.Type.BOOL_TYPE;
 import static typing.Type.INT_TYPE;
@@ -112,6 +112,7 @@ public final class CodeGen extends ASTBaseVisitor<Integer> {
 	    for (int addr = 0; addr < nextInstr; addr++) {
 	    	pw.printf("%s\n", code[addr].toString());
 	    }
+		pw.printf("li $v0, 10\n");
 		pw.printf("syscall");
 	}
 
@@ -189,12 +190,14 @@ public final class CodeGen extends ASTBaseVisitor<Integer> {
 	protected Integer visitAssign(AST node) {
 		AST r = node.getChild(1);
 	    int x = visit(r);
+		System.out.print(x);
 	    int addr = node.getChild(0).intData;
 	    Type varType = vt.getType(addr);
 	    if (varType == FLOAT_TYPE) {
 	        emit(STWf, addr, x);
 	    } else { // All other types, include ints, bools and strs.
-	        emit(STWi, addr, x);
+			System.out.print("( "+addr+ " )");
+	        emit(OpCode.SW, addr, x);
 	    }
 	    return -1; // This is not an expression, hence no value to return.
 	}
@@ -267,7 +270,7 @@ public final class CodeGen extends ASTBaseVisitor<Integer> {
 	protected Integer visitIntVal(AST node) {
 		int x = newIntReg();
 	    int c = node.intData;
-	    emit(LDIi, x, c);
+	    emit(OpCode.LDW, x, c);
 	    return x;
 	}
 
@@ -325,10 +328,10 @@ public final class CodeGen extends ASTBaseVisitor<Integer> {
 	    int z = visit(node.getChild(1));
 	    if (node.type == FLOAT_TYPE) {
 	        x = newFloatReg();
-	        emit(ADDf, x, y, z);
+	        emit(OpCode.ADD, x, y, z);
 	    } else if (node.type == INT_TYPE) {
 	    	x = newIntReg();
-	        emit(ADDi, x, y, z);
+	        emit(OpCode.ADD, x, y, z);
 	    } else if (node.type == BOOL_TYPE) {
 	    	x = newIntReg();
 	        emit(OROR, x, y, z);

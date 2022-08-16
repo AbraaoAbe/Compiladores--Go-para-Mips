@@ -14,10 +14,10 @@ public final class Instruction {
 
 	public String t1; // Type of the register
 
-	public Instruction(OpCode op, int o1, String t1, int o2, int o3) {
+	public Instruction(OpCode op, int o1, int o2, int o3) {
 		this.op = op;
 		this.o1 = o1;
-		this.t1 = t1;
+		//this.t1 = t1;
 		this.o2 = o2;
 		this.o3 = o3;
 	}

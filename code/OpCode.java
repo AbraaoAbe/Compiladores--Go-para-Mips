@@ -23,13 +23,13 @@ public enum OpCode {
     //DIVf("DIVf", 3),	// DIVf fx, fy, fz	; fx <- fy / fz
 
     //ADDi("ADDi", 3),	// ADDi ix, iy, iz	; ix <- iy + iz
-    ADDf("ADDf", 3),	// ADDf fx, fy, fz	; fx <- fy + fz
-    SUBi("SUBi", 3),	// SUBi ix, iy, iz	; ix <- iy - iz
-    SUBf("SUBf", 3),	// SUBf fx, fy, fz	; fx <- fy - fz
-    MULi("MULi", 3),	// MULi ix, iy, iz	; ix <- iy * iz
-    MULf("MULf", 3),	// MULf fx, fy, fz	; fx <- fy * fz
-    DIVi("DIVi", 3),	// DIVi ix, iy, iz	; ix <- iy / iz
-    DIVf("DIVf", 3),	// DIVf fx, fy, fz	; fx <- fy / fz
+    // ADDf("ADDf", 3),	// ADDf fx, fy, fz	; fx <- fy + fz
+    // SUBi("SUBi", 3),	// SUBi ix, iy, iz	; ix <- iy - iz
+    // SUBf("SUBf", 3),	// SUBf fx, fy, fz	; fx <- fy - fz
+    // MULi("MULi", 3),	// MULi ix, iy, iz	; ix <- iy * iz
+    // MULf("MULf", 3),	// MULf fx, fy, fz	; fx <- fy * fz
+    // DIVi("DIVi", 3),	// DIVi ix, iy, iz	; ix <- iy / iz
+    // DIVf("DIVf", 3),	// DIVf fx, fy, fz	; fx <- fy / fz
     // Widen to float
     WIDf("WIDf", 2),	// WIDf fx, iy		; fx <- (float) iy
 
@@ -154,7 +154,7 @@ public enum OpCode {
 	// 7   | $f0  | Read floating-point (64 bit): Float returned in $f0
 	// 8   | $a0  | Read str: $a0 = memory address of string input buffer 
     //                    $a1 = length of string buffer (n)
-    // 10  | $f0  | Read floating-point (64 bit): Float returned in $f0
+    // 10  | $v0  | exit program
 	// ----------------------------------------------------------------------------
 	// OBS.: All strings in memory are null ('\0') terminated, like in C.
 	// ----------------------------------------------------------------------------
