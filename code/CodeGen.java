@@ -208,17 +208,21 @@ public final class CodeGen extends ASTBaseVisitor<Integer> {
 	@Override
 	protected Integer visitAssign(AST node) {
 		AST varuse = node.getChild(0);
-		int reg = visit(varuse);
+		int regVar = visit(varuse);
 		AST r = node.getChild(1);
-	    String x = String.valueOf(visit(r));
-		System.out.print(reg);
+	    String regValor = String.valueOf(visit(r));
+		//System.out.print(reg);
+
 	    int addr = node.getChild(0).intData;
 	    Type varType = vt.getType(addr);
 	    if (varType == FLOAT_TYPE) {
-	        emit(STWf, String.valueOf(addr), x);
+	        emit(STWf, String.valueOf(addr), regValor);
 	    } else { // All other types, include ints, bools and strs.
 			//System.out.print("( "+addr+ " )");
-	        emit(OpCode.SW, String.valueOf(reg), x);
+			//move
+			emit(OpCode.MV, "$"+String.valueOf(regVar), "$"+regValor);
+	        //store
+			emit(OpCode.SW, "$"+String.valueOf(regVar), vt.getName(addr));
 	    }
 	    return -1; // This is not an expression, hence no value to return.
 	}
@@ -289,9 +293,9 @@ public final class CodeGen extends ASTBaseVisitor<Integer> {
 
 	@Override
 	protected Integer visitIntVal(AST node) {
-		String x = newIntReg();
+		String x = newIntReg_T();
 	    int c = node.intData;
-	    emit(OpCode.LI, x, String.valueOf(c));
+	    emit(OpCode.LI, "$"+x, String.valueOf(c));
 	    return Integer.valueOf(x);
 	}
 
@@ -465,7 +469,7 @@ public final class CodeGen extends ASTBaseVisitor<Integer> {
 	    } else {
 	        //x = newIntReg();
 			x = newIntReg_T();
-	        emit(OpCode.LDW, x, name);
+	        emit(OpCode.LDW, "$"+x, name);
 	    }
 	    return Integer.valueOf(x);
 	}
