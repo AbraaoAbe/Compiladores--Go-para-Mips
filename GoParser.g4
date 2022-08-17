@@ -123,7 +123,7 @@ returnStmt: RETURN expression?;
 
 //CLAUSULA DO IF 
 ifStmt:
-	IF ( expression  ) block ( ELSE block )?;
+	IF ( expression  ) block eos? ( ELSE block )?;
 
 //CLAUSULA DO IF
 //ifStmt:

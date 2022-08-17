@@ -64,14 +64,14 @@ public enum OpCode {
     JMPal("jal", 1), // jal 1000     ; $ra=PC+4; go to address 1000
     
     // Branch on equal/not equal
-    BEQ("beq", 2), 	// beq $1,$2,Label    ; if($1 == $2) go to Label
-    BNE("bne", 2), 	// bne $1,$2,Label    ; if($1 != $2) go to Label 
+    BEQ("beq", 3), 	// beq $1,$2,Label    ; if($1 == $2) go to Label
+    BNE("bne", 3), 	// bne $1,$2,Label    ; if($1 != $2) go to Label 
     // Branch on greater/less
-    BGT("bgt", 2), 	// bgt $1,$2,Label    ; if($1 > $2) go to Label
-    BLT("blt", 2), 	// blt $1,$2,Label    ; if($1 < $2) go to Label
+    BGT("bgt", 3), 	// bgt $1,$2,Label    ; if($1 > $2) go to Label
+    BLT("blt", 3), 	// blt $1,$2,Label    ; if($1 < $2) go to Label
     // Branch on greater/less than or equal
-    BGE("bge", 2), 	// bge $1,$2,Label    ; if($1 >= $2) go to Label
-    BLE("ble", 2), 	// ble $1,$2,Label    ; if($1 <= $2) go to Label
+    BGE("bge", 3), 	// bge $1,$2,Label    ; if($1 >= $2) go to Label
+    BLE("ble", 3), 	// ble $1,$2,Label    ; if($1 <= $2) go to Label
     
     // Absolute jump
     JUMP("JUMP", 1),	// JUMP addr		; PC <- addr

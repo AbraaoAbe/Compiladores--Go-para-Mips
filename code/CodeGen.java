@@ -69,6 +69,8 @@ public final class CodeGen extends ASTBaseVisitor<Integer> {
 	private static int floatRegsCount;
 	//Guarda registros "importantes" o i de um for ou o lado esquerdo do assign
 	private static ArrayList<Boolean> freeRegs = new ArrayList<>();
+
+	public static int intLabelsIfElse;
 	
 	public CodeGen(StrTable st, VarTable vt, FuncTable ft, String file_target) throws IOException {
 		this.code = new Instruction[INSTR_MEM_SIZE];
@@ -88,6 +90,7 @@ public final class CodeGen extends ASTBaseVisitor<Integer> {
 		intRegs_A_count = 0;
 	 	intRegs_T_count = 0;
 		intRegs_S_count = 0;
+		intLabelsIfElse = 0;
 
 
 		for (int i = 0; i < 17; i++){
@@ -326,33 +329,39 @@ public final class CodeGen extends ASTBaseVisitor<Integer> {
 
 	 @Override
 	 protected Integer visitIf(AST node) {
-//	 	// Code for test.
-//	     int testReg = visit(node.getChild(0));
-//	     int condJumpInstr = nextInstr;
-//	     emit(BOFb, testReg, 0); // Leave offset empty now, will be backpatched.
-//
-//	     // Code for TRUE block.
-//	     int trueBranchStart = nextInstr;
-//	     visit(node.getChild(1)); // Generate TRUE block.
-//
-//	     // Code for FALSE block.
-//	     int falseBranchStart;
-//	     if (node.getChildCount() == 3) { // We have an else.
-//	         // Emit unconditional jump for TRUE block.
-//	         int uncondJumpInstr = nextInstr;
-//	         emit(JUMP, 0); // Leave address empty now, will be backpatched.
-//	         falseBranchStart = nextInstr;
-//	         visit(node.getChild(2)); // Generate FALSE block.
-//	         // Backpatch unconditional jump at end of TRUE block.
-//	         backpatchJump(uncondJumpInstr, nextInstr);
-//	     } else {
-//	     	falseBranchStart = nextInstr;
-//	     }
-//
-//	     // Backpatch test.
-//	     backpatchBranch(condJumpInstr, falseBranchStart - trueBranchStart + 1);
-//
-	     return -1; // This is not an expression, hence no value to return.
+		String xlabel = String.valueOf(intLabelsIfElse);
+	 	// Code for test.
+	     int testReg = visit(node.getChild(0));
+	     //int condJumpInstr = nextInstr;
+		 //caso a exprexão seja falsa pula pro else (mesmo que ele seja vazio)
+	     emit(BEQ, "$"+String.valueOf(testReg),"$0", "ELSE"+xlabel); // Leave offset empty now, will be backpatched.
+
+	     // Code for TRUE block.
+	     //int trueBranchStart = nextInstr;
+	     visit(node.getChild(1)); // Generate TRUE block.
+
+		 emit(JMP, "ENDIF"+xlabel);
+		 //inicio do else
+		 emit(LABEL, "ELSE"+xlabel);
+	     // Code for FALSE block.
+	     //int falseBranchStart;
+	     if (node.getChildCount() == 3) { // We have an else.
+	         // Emit unconditional jump for TRUE block.
+	         //int uncondJumpInstr = nextInstr;
+	         //emit(JUMP, 0); // Leave address empty now, will be backpatched.
+	         //falseBranchStart = nextInstr;
+	         visit(node.getChild(2)); // Generate FALSE block.
+	         // Backpatch unconditional jump at end of TRUE block.
+	         //backpatchJump(uncondJumpInstr, nextInstr);
+	     } else {
+	     	//falseBranchStart = nextInstr;
+	     }
+		 emit(LABEL, "ENDIF"+xlabel);
+
+	     // Backpatch test.
+	     //backpatchBranch(condJumpInstr, falseBranchStart - trueBranchStart + 1);
+		intLabelsIfElse++;
+	    return -1; // This is not an expression, hence no value to return.
 	 }
 
 	@Override
@@ -363,22 +372,148 @@ public final class CodeGen extends ASTBaseVisitor<Integer> {
 	    return Integer.valueOf(x);
 	}
 
-	// // @Override
-	// // protected Integer visitLt(AST node) {
-	// // 	AST l = node.getChild(0);
-	// // 	AST r = node.getChild(1);
-	// // 	int y = visit(l);
-	// // 	int z = visit(r);
-	// // 	int x = newIntReg();
-	// // 	if (r.type == FLOAT_TYPE) {  // Could equally test 'l' here.
-	// // 		emit(LTHf, x, y, z);
-	// // 	} else if (r.type == INT_TYPE) {
-	// // 		emit(LTHi, x, y, z);
-	// // 	} else { // Must be STR_TYPE
-	// //         emit(LTHs, x, y, z);
-	// //     }
-	// //     return x;
-	// // }
+	@Override
+	protected Integer visitLess(AST node) {
+		AST l = node.getChild(0);
+		AST r = node.getChild(1);
+		int y = visit(l);
+		int z = visit(r);
+		String x = newIntReg_T();
+		if (r.type == FLOAT_TYPE) {  // Could equally test 'l' here.
+			emit(SLT, "$"+x, "$"+String.valueOf(y), "$"+String.valueOf(z));
+		} else if (r.type == INT_TYPE) {
+			emit(SLT, "$"+x, "$"+String.valueOf(y), "$"+String.valueOf(z));
+		} else { // Must be STR_TYPE
+	        emit(SLT, "$"+x, "$"+String.valueOf(y), "$"+String.valueOf(z));
+	    }
+	    return Integer.valueOf(x);
+	}
+
+	@Override
+	protected Integer visitGreater(AST node) {
+		AST l = node.getChild(0);
+		AST r = node.getChild(1);
+		int z = visit(l);
+		int y = visit(r);
+		String x = newIntReg_T();
+		if (r.type == FLOAT_TYPE) {  // Could equally test 'l' here.
+			emit(SLT, "$"+x, "$"+String.valueOf(y), "$"+String.valueOf(z));
+		} else if (r.type == INT_TYPE) {
+			emit(SLT, "$"+x, "$"+String.valueOf(y), "$"+String.valueOf(z));
+		} else { // Must be STR_TYPE
+	        emit(SLT, "$"+x, "$"+String.valueOf(y), "$"+String.valueOf(z));
+	    }
+	    return Integer.valueOf(x);
+	}
+
+	@Override
+	protected Integer visitLess_Equals(AST node) {
+		AST l = node.getChild(0);
+		AST r = node.getChild(1);
+		int z = visit(l);
+		int y = visit(r);
+		String x = newIntReg_T();
+		//valor da label para nao ficar igual (da problema no mips)
+		String xlabel = String.valueOf(intLabelsIfElse);
+		if (r.type == FLOAT_TYPE) {  // Could equally test 'l' here.
+			emit(BLE, "$"+String.valueOf(z), "$"+String.valueOf(y), "TRUE"+xlabel);
+			emit(LI, "$"+x, "0");
+			emit(JMP, "FALSE"+xlabel);
+			emit(LABEL, "TRUE"+xlabel);
+			emit(LI, "$"+x, "1");
+			emit(LABEL, "FALSE"+xlabel);
+		} else if (r.type == INT_TYPE) {
+			emit(BLE, "$"+String.valueOf(z), "$"+String.valueOf(y), "TRUE"+xlabel);
+			emit(LI, "$"+x, "0");
+			emit(JMP, "FALSE"+xlabel);
+			emit(LABEL, "TRUE"+xlabel);
+			emit(LI, "$"+x, "1");
+			emit(LABEL, "FALSE"+xlabel);
+		} else { // Must be STR_TYPE
+	        emit(BLE, "$"+String.valueOf(z), "$"+String.valueOf(y), "TRUE"+xlabel);
+			emit(LI, "$"+x, "0");
+			emit(JMP, "FALSE"+xlabel);
+			emit(LABEL, "TRUE"+xlabel);
+			emit(LI, "$"+x, "1");
+			emit(LABEL, "FALSE"+xlabel);
+	    }
+	    return Integer.valueOf(x);
+	}
+
+	@Override
+	protected Integer visitGreater_Equals(AST node) {
+		AST l = node.getChild(0);
+		AST r = node.getChild(1);
+		//somente essas 2 linhas difere essa funcao da outra de cima
+		int y = visit(l);
+		int z = visit(r);
+
+		//
+		String x = newIntReg_T();
+		//valor da label para nao ficar igual (da problema no mips)
+		String xlabel = String.valueOf(intLabelsIfElse);
+		if (r.type == FLOAT_TYPE) {  // Could equally test 'l' here.
+			emit(BLE, "$"+String.valueOf(z), "$"+String.valueOf(y), "TRUE"+xlabel);
+			emit(LI, "$"+x, "0");
+			emit(JMP, "FALSE"+xlabel);
+			emit(LABEL, "TRUE"+xlabel);
+			emit(LI, "$"+x, "1");
+			emit(LABEL, "FALSE"+xlabel);
+		} else if (r.type == INT_TYPE) {
+			emit(BLE, "$"+String.valueOf(z), "$"+String.valueOf(y), "TRUE"+xlabel);
+			emit(LI, "$"+x, "0");
+			emit(JMP, "FALSE"+xlabel);
+			emit(LABEL, "TRUE"+xlabel);
+			emit(LI, "$"+x, "1");
+			emit(LABEL, "FALSE"+xlabel);
+		} else { // Must be STR_TYPE
+	        emit(BLE, "$"+String.valueOf(z), "$"+String.valueOf(y), "TRUE"+xlabel);
+			emit(LI, "$"+x, "0");
+			emit(JMP, "FALSE"+xlabel);
+			emit(LABEL, "TRUE"+xlabel);
+			emit(LI, "$"+x, "1");
+			emit(LABEL, "FALSE"+xlabel);
+	    }
+	    return Integer.valueOf(x);
+	}
+
+	
+	@Override
+	protected Integer visitAnd(AST node) {
+		AST l = node.getChild(0);
+		AST r = node.getChild(1);
+		int y = visit(l);
+		int z = visit(r);
+		String x = newIntReg_T();
+		if (r.type == FLOAT_TYPE) {  // Could equally test 'l' here.
+			emit(AND, "$"+x, "$"+String.valueOf(y), "$"+String.valueOf(z));
+		} else if (r.type == INT_TYPE) {
+			emit(AND, "$"+x, "$"+String.valueOf(y), "$"+String.valueOf(z));
+		} else { // Must be STR_TYPE
+	        emit(AND, "$"+x, "$"+String.valueOf(y), "$"+String.valueOf(z));
+	    }
+	    return Integer.valueOf(x);
+	}
+
+	@Override
+	protected Integer visitOr(AST node) {
+		AST l = node.getChild(0);
+		AST r = node.getChild(1);
+		int y = visit(l);
+		int z = visit(r);
+		String x = newIntReg_T();
+		if (r.type == FLOAT_TYPE) {  // Could equally test 'l' here.
+			emit(OR, "$"+x, "$"+String.valueOf(y), "$"+String.valueOf(z));
+		} else if (r.type == INT_TYPE) {
+			emit(OR, "$"+x, "$"+String.valueOf(y), "$"+String.valueOf(z));
+		} else { // Must be STR_TYPE
+	        emit(OR, "$"+x, "$"+String.valueOf(y), "$"+String.valueOf(z));
+	    }
+	    return Integer.valueOf(x);
+	}
+	
+	
+	
 
 	 @Override
 	 protected Integer visitMinus(AST node) {
