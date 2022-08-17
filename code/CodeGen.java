@@ -22,8 +22,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 /*
  * Visitador da AST para geração básica de código. Funciona de
@@ -68,6 +67,8 @@ public final class CodeGen extends ASTBaseVisitor<Integer> {
 	private static int intRegs_T_count;
 	private static int intRegs_S_count;
 	private static int floatRegsCount;
+	//Guarda registros "importantes" o i de um for ou o lado esquerdo do assign
+	private static ArrayList<Boolean> freeRegs = new ArrayList<>();
 	
 	public CodeGen(StrTable st, VarTable vt, FuncTable ft, String file_target) throws IOException {
 		this.code = new Instruction[INSTR_MEM_SIZE];
@@ -87,6 +88,12 @@ public final class CodeGen extends ASTBaseVisitor<Integer> {
 		intRegs_A_count = 0;
 	 	intRegs_T_count = 0;
 		intRegs_S_count = 0;
+
+
+		for (int i = 0; i < 17; i++){
+			freeRegs.add(Boolean.TRUE);
+		}
+		System.out.println(freeRegs.size());
 		//utilizado como temporario +4 na impressão
 		floatRegsCount = 0;
 
@@ -188,7 +195,21 @@ public final class CodeGen extends ASTBaseVisitor<Integer> {
 
 	private String newIntReg_T() {
 		String s = String.valueOf(intRegs_T_count + 8);
-		intRegs_T_count++;
+		if (getFreeReg(intRegs_T_count) == Boolean.TRUE){
+			intRegs_T_count++;
+			//Ultimo registrador temporario eh o 25
+			if (intRegs_T_count + 8 == 25){
+				intRegs_T_count = 0;
+			}
+		}
+		else{
+			intRegs_T_count++;
+			if (intRegs_T_count + 8 == 25){
+				intRegs_T_count = 0;
+			}
+			s = newIntReg_T();
+		}
+
 		return s;  
 	}
     
@@ -197,7 +218,46 @@ public final class CodeGen extends ASTBaseVisitor<Integer> {
 		floatRegsCount++;
 		return s;
 	}
-	
+
+	private Boolean getFreeReg(int idx) {
+		if(idx >= 17){
+			System.out.println(idx);
+		}
+		else {
+			return freeRegs.get(idx);
+		}
+		return Boolean.FALSE;
+	}
+
+	private Integer getFreeRegSize() {
+		return freeRegs.size();
+	}
+
+	private void setFreeReg(int idx) {
+		if(idx >= 17){
+			System.out.println(idx);
+		}
+		else{
+			freeRegs.set(idx, Boolean.TRUE);
+		}
+	}
+
+	private void setNotFreeReg(int idx) {
+		if(idx >= 17){
+			System.out.println(idx);
+		}
+		else {
+			freeRegs.set(idx, Boolean.FALSE);
+		}
+	}
+
+	private String getDataVarName(String var_name){
+		if (func_name != "global") { var_name = func_name + "." + var_name; }
+		return var_name;
+	}
+
+
+
 	// Funcionamento dos visitadores abaixo deve ser razoavelmente explicativo
 	// neste final do curso...
 	
@@ -206,6 +266,10 @@ public final class CodeGen extends ASTBaseVisitor<Integer> {
 	protected Integer visitAssign(AST node) {
 		AST varuse = node.getChild(0);
 		int regVar = visit(varuse);
+
+		//seta o registrador como importante
+		setNotFreeReg(regVar - 8);
+		
 		AST r = node.getChild(1);
 	    String regValor = String.valueOf(visit(r));
 		//System.out.print(reg);
@@ -219,7 +283,10 @@ public final class CodeGen extends ASTBaseVisitor<Integer> {
 			//move
 			emit(OpCode.MV, "$"+String.valueOf(regVar), "$"+regValor);
 	        //store
-			emit(OpCode.SW, "$"+String.valueOf(regVar), vt.getName(addr));
+
+			emit(OpCode.SW, "$"+String.valueOf(regVar), getDataVarName(vt.getName(addr)));
+			//libera o registrador importante
+			setFreeReg(regVar - 8);
 	    }
 	    return -1; // This is not an expression, hence no value to return.
 	}
@@ -366,15 +433,15 @@ public final class CodeGen extends ASTBaseVisitor<Integer> {
 	    String z = String.valueOf(visit(node.getChild(1)));
 	    if (node.type == FLOAT_TYPE) {
 	        x = newFloatReg();
-	        emit(OpCode.ADD, x, y, z);
+	        emit(OpCode.ADD, "$"+x,"$"+ y, "$"+z);
 	    } else if (node.type == INT_TYPE) {
-	    	x = newIntReg();
-	        emit(OpCode.ADD, x, y, z);
+	    	x = newIntReg_T();
+			emit(OpCode.ADD, "$"+x,"$"+ y, "$"+z);
 	    } else if (node.type == BOOL_TYPE) {
-	    	x = newIntReg();
+	    	x = newIntReg_T();
 	        emit(OROR, x, y, z);
 	    } else { // Must be STR_TYPE
-	    	x = newIntReg();
+	    	x = newIntReg_T();
 	        emit(CATs, x, y, z);
 	    }
 
@@ -475,7 +542,8 @@ public final class CodeGen extends ASTBaseVisitor<Integer> {
 	protected Integer visitVarUse(AST node) {
 		String addr = String.valueOf(node.intData);
 	    String x;
-		String name = vt.getName(node.intData);
+		String name = getDataVarName(vt.getName(node.intData));
+		//String name = "ola";
 	    if (node.type == FLOAT_TYPE) {
 	        x = newFloatReg();
 	        emit(LDWf, x, addr);

@@ -19,7 +19,7 @@ public enum OpCode {
     SUBf("sub.d", 3),	// SUBf fx, fy, fz	; fx <- fy - fz
     MUL("mul", 3),	// mul $1,$2,$3     ; $1 <- $2 * $3
     MULt("mult", 2),	// mult $2,$3	; $hi,$low <- $2*$3; upper 32 bits stored in hi; lower 32 bits stored in low
-    DIV("div", 3),	// div $2,$3	; $hi,$low <- $2/$3; remainder stored in hi: quocient stored in low;
+    DIV("div", 2),	// div $2,$3	; $hi,$low <- $2/$3; remainder stored in hi: quocient stored in low;
     //DIVf("DIVf", 3),	// DIVf fx, fy, fz	; fx <- fy / fz
 
     //ADDi("ADDi", 3),	// ADDi ix, iy, iz	; ix <- iy + iz
