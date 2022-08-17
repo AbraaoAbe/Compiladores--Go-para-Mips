@@ -16,7 +16,7 @@ public enum OpCode {
     ADD("add", 3),	// add $1, $2, $3	; $1 <- $2 + $3
     ADDi("addi", 3),	// addi $1, $2, int	; $1 <- $2 + int
     SUB("sub", 3),	// sub $1, $2, $3	; $1 <- $2 - $3
-    //SUBf("SUBf", 3),	// SUBf fx, fy, fz	; fx <- fy - fz
+    SUBf("sub.d", 3),	// SUBf fx, fy, fz	; fx <- fy - fz
     MUL("mul", 3),	// mul $1,$2,$3     ; $1 <- $2 * $3
     MULt("mult", 2),	// mult $2,$3	; $hi,$low <- $2*$3; upper 32 bits stored in hi; lower 32 bits stored in low
     DIV("div", 3),	// div $2,$3	; $hi,$low <- $2/$3; remainder stored in hi: quocient stored in low;
@@ -82,6 +82,7 @@ public enum OpCode {
 
     // ---------------------------------------------------
     // Loads, stores and moves for MIPS
+    LABEL("label", 1),
     
     // Load word (from address or label)
     LDW("lw", 2), 	// lw $1, 100($2)	; $1 <- Memory[$2+100]

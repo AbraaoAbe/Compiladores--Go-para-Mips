@@ -2,41 +2,18 @@ package code;
 
 import static code.Instruction.INSTR_MEM_SIZE;
 // import static code.OpCode.ADDf;
-import static code.OpCode.ADDi;
-import static code.OpCode.B2Ss;
-import static code.OpCode.BOFb;
-import static code.OpCode.CALL;
-import static code.OpCode.CATs;
 // import static code.OpCode.DIVf;
 // import static code.OpCode.DIVi;
-import static code.OpCode.EQUf;
-import static code.OpCode.EQUi;
-import static code.OpCode.EQUs;
-import static code.OpCode.HALT;
-import static code.OpCode.I2Ss;
-import static code.OpCode.JUMP;
-import static code.OpCode.LDIf;
-import static code.OpCode.LDIi;
-import static code.OpCode.LDWf;
-import static code.OpCode.LDWi;
-import static code.OpCode.LTHf;
-import static code.OpCode.LTHi;
-import static code.OpCode.LTHs;
 // import static code.OpCode.MULf;
 // import static code.OpCode.MULi;
-import static code.OpCode.OROR;
-import static code.OpCode.R2Ss;
-import static code.OpCode.STWf;
-import static code.OpCode.STWi;
 // import static code.OpCode.SUBf;
 // import static code.OpCode.SUBi;
-import static code.OpCode.WIDf;
-import static typing.Type.BOOL_TYPE;
-import static typing.Type.INT_TYPE;
-import static typing.Type.FLOAT_TYPE;
+import static code.OpCode.*;
+import static typing.Type.*;
 
 import ast.AST;
 import ast.ASTBaseVisitor;
+import tables.FuncTable;
 import tables.StrTable;
 import tables.VarTable;
 import typing.Type;
@@ -62,8 +39,14 @@ public final class CodeGen extends ASTBaseVisitor<Integer> {
 
 	private final Instruction code[]; // Code memory
 	private final StrTable st;
-	private final VarTable vt;
+	private VarTable vt;
+    private final VarTable globalVt;
+	private final FuncTable ft;
+	private String func_name; // Store the name of the function seen right now
+
 	private PrintWriter pw;
+
+
 	private static Map<String, Integer> primitiveSizes;
 	static {
 		primitiveSizes = new HashMap<>();
@@ -86,10 +69,13 @@ public final class CodeGen extends ASTBaseVisitor<Integer> {
 	private static int intRegs_S_count;
 	private static int floatRegsCount;
 	
-	public CodeGen(StrTable st, VarTable vt, String file_target) throws IOException {
+	public CodeGen(StrTable st, VarTable vt, FuncTable ft, String file_target) throws IOException {
 		this.code = new Instruction[INSTR_MEM_SIZE];
 		this.st = st;
+		this.globalVt = vt;
 		this.vt = vt;
+		this.ft = ft;
+		this.func_name = "global";
 		this.pw = new PrintWriter(new FileWriter(file_target));
 	}
 	
@@ -103,9 +89,16 @@ public final class CodeGen extends ASTBaseVisitor<Integer> {
 		intRegs_S_count = 0;
 		//utilizado como temporario +4 na impressão
 		floatRegsCount = 0;
+
+		pw.printf(".data\n");
 	    dumpStrTable();
-		dumpVarTable();
-	    visit(root);
+
+		visit(root);
+		dumpVarTable(globalVt, "global");
+		for (int i =0; i < ft.getTable().size(); i++){
+			dumpVarTable(ft.getVarTable(i), ft.getName(i));
+			pw.printf("\n");
+		}
 	    dumpProgram();
 		pw.close();
 	}
@@ -116,6 +109,7 @@ public final class CodeGen extends ASTBaseVisitor<Integer> {
 	void dumpProgram() {
 
 		pw.printf("\n.text\n");
+		pw.printf(".globl main\n");
 	    for (int addr = 0; addr < nextInstr; addr++) {
 	    	pw.printf("%s\n", code[addr].toString());
 	    }
@@ -125,28 +119,31 @@ public final class CodeGen extends ASTBaseVisitor<Integer> {
 	}
 
 	void dumpStrTable() {
-		pw.printf(".data\n");
 		pw.printf("# Declare the statics strings\n");
 	    for (int i = 0; i < st.size(); i++) {
 	        pw.printf("str%d: .asciiz %s\n", i, st.get(i));
 	    }
 	}
 
-	void dumpVarTable() {
-		pw.printf("# Declare the global variables strings\n");
-		for (int i = 0; i < vt.size(); i++) {
-			Type t = vt.getType(i);
-			boolean isArray = vt.getTamArr(i) > 0;
+	void dumpVarTable(VarTable varT, String name_func) {
+		pw.printf("# Declare the %s variables\n", name_func);
+		for (int i = 0; i < varT.size(); i++) {
+			Type t = varT.getType(i);
+			boolean isArray = varT.getTamArr(i) > 0;
+			if (!Objects.equals(name_func, "global")) {
+				pw.printf("%s.", name_func);
+			}
 			if (isArray){
 				//alocateArray(vt, i);
 			} else if (t == INT_TYPE) {
-				alocateInt(vt, i);
-			} 
-			//else if (t == FLOAT_TYPE) {
+				alocateInt(varT, i);
+//			} else if (t == FLOAT_TYPE) {
 			// 	alocateFloat(vt, i);
-			// } else if (t == BOOL_TYPE) {
-			// 	alocateBool(vt, i);
-			// }
+			 } else if (t == BOOL_TYPE) {
+			 	alocateBool(vt, i);
+//			 } else if (t == STRING_TYPE){
+//				alocateString(vt, i);
+			}
 		}
 	}
 	
@@ -244,52 +241,52 @@ public final class CodeGen extends ASTBaseVisitor<Integer> {
 	//     return x;
 	// }
 
-	// @Override
-	// protected Integer visitBlock(AST node) {
-	//     for (int i = 0; i < node.getChildCount(); i++) {
-	//         visit(node.getChild(i));
-	//     }
-	//     return -1; // This is not an expression, hence no value to return.
-	// }
+	 @Override
+	 protected Integer visitBlock(AST node) {
+	     for (int i = 0; i < node.getChildCount(); i++) {
+	         visit(node.getChild(i));
+	     }
+	     return -1; // This is not an expression, hence no value to return.
+	 }
 
-	// @Override
-	// protected Integer visitBoolVal(AST node) {
-	// 	int x = newIntReg();
-	//     int c = node.intData;
-	//     emit(LDIi, x, c);
-	//     return x;
-	// }
+	 @Override
+	 protected Integer visitBoolVal(AST node) {
+	 	String x = newIntReg();
+	     int c = node.intData;
+	     emit(LI, x, String.valueOf(c));
+	     return Integer.valueOf(x);
+	 }
 
-	// @Override
-	// protected Integer visitIf(AST node) {
-	// 	// Code for test.
-	//     int testReg = visit(node.getChild(0));
-	//     int condJumpInstr = nextInstr;
-	//     emit(BOFb, testReg, 0); // Leave offset empty now, will be backpatched.
-
-	//     // Code for TRUE block.
-	//     int trueBranchStart = nextInstr;
-	//     visit(node.getChild(1)); // Generate TRUE block.
-
-	//     // Code for FALSE block.
-	//     int falseBranchStart;
-	//     if (node.getChildCount() == 3) { // We have an else.
-	//         // Emit unconditional jump for TRUE block.
-	//         int uncondJumpInstr = nextInstr;
-	//         emit(JUMP, 0); // Leave address empty now, will be backpatched.
-	//         falseBranchStart = nextInstr;
-	//         visit(node.getChild(2)); // Generate FALSE block.
-	//         // Backpatch unconditional jump at end of TRUE block.
-	//         backpatchJump(uncondJumpInstr, nextInstr);
-	//     } else {
-	//     	falseBranchStart = nextInstr;
-	//     }
-
-	//     // Backpatch test.
-	//     backpatchBranch(condJumpInstr, falseBranchStart - trueBranchStart + 1);
-
-	//     return -1; // This is not an expression, hence no value to return.
-	// }
+	 @Override
+	 protected Integer visitIf(AST node) {
+//	 	// Code for test.
+//	     int testReg = visit(node.getChild(0));
+//	     int condJumpInstr = nextInstr;
+//	     emit(BOFb, testReg, 0); // Leave offset empty now, will be backpatched.
+//
+//	     // Code for TRUE block.
+//	     int trueBranchStart = nextInstr;
+//	     visit(node.getChild(1)); // Generate TRUE block.
+//
+//	     // Code for FALSE block.
+//	     int falseBranchStart;
+//	     if (node.getChildCount() == 3) { // We have an else.
+//	         // Emit unconditional jump for TRUE block.
+//	         int uncondJumpInstr = nextInstr;
+//	         emit(JUMP, 0); // Leave address empty now, will be backpatched.
+//	         falseBranchStart = nextInstr;
+//	         visit(node.getChild(2)); // Generate FALSE block.
+//	         // Backpatch unconditional jump at end of TRUE block.
+//	         backpatchJump(uncondJumpInstr, nextInstr);
+//	     } else {
+//	     	falseBranchStart = nextInstr;
+//	     }
+//
+//	     // Backpatch test.
+//	     backpatchBranch(condJumpInstr, falseBranchStart - trueBranchStart + 1);
+//
+	     return -1; // This is not an expression, hence no value to return.
+	 }
 
 	@Override
 	protected Integer visitIntVal(AST node) {
@@ -316,35 +313,51 @@ public final class CodeGen extends ASTBaseVisitor<Integer> {
 	// //     return x;
 	// // }
 
-	// @Override
-	// protected Integer visitMinus(AST node) {
-	// 	int x;
-	//     int y = visit(node.getChild(0));
-	//     int z = visit(node.getChild(1));
-	//     if (node.type == FLOAT_TYPE) {
-	//         x = newFloatReg();
-	//         emit(SUBf, x, y, z);
-	//     } else {
-	//         x = newIntReg();
-	//         emit(SUBi, x, y, z);
-	//     }
-	//     return x;
-	// }
+	 @Override
+	 protected Integer visitMinus(AST node) {
+	 	String x;
+	     String y = String.valueOf(visit(node.getChild(0)));
+	     String z = String.valueOf(visit(node.getChild(1)));
+	     if (node.type == FLOAT_TYPE) {
+	         x = newFloatReg();
+	         emit(SUBf, x, y, z);
+	     } else {
+	         x = newIntReg_T();
+	         emit(SUB, "$"+x, "$"+y, "$"+z);
+	     }
+	     return Integer.valueOf(x);
+	 }
 
-	// @Override
-	// protected Integer visitDiv(AST node) {
-	// 	int x;
-	//     int y = visit(node.getChild(0));
-	//     int z = visit(node.getChild(1));
-	//     if (node.type == FLOAT_TYPE) {
-	//         x = newFloatReg();
-	//         emit(DIVf, x, y, z);
-	//     } else {
-	//         x = newIntReg();
-	//         emit(DIVi, x, y, z);
-	//     }
-	//     return x;
-	// }
+	@Override
+	protected Integer visitTimes(AST node) {
+		String x;
+		String y = String.valueOf(visit(node.getChild(0)));
+		String z = String.valueOf(visit(node.getChild(1)));
+		if (node.type == FLOAT_TYPE) {
+			x = newFloatReg();
+			emit(SUBf, "$"+x, "$"+y, "$"+z);
+		} else {
+			x = newIntReg_T();
+			emit(MUL, "$"+x, "$"+y, "$"+z);
+		}
+		return Integer.valueOf(x);
+	}
+
+	 @Override
+	 protected Integer visitDiv(AST node) {
+	 	String x;
+		 String y = String.valueOf(visit(node.getChild(0)));
+	     String z = String.valueOf(visit(node.getChild(1)));
+	     if (node.type == FLOAT_TYPE) {
+	         x = newFloatReg();
+	         emit(DIV,"$"+y, "$"+z);
+	     } else {
+	         x = newIntReg_T();
+	         emit(DIV, "$"+y, "$"+z);
+			 emit(MVFL, "$"+x);
+	     }
+	     return Integer.valueOf(x);
+	 }
 
 	@Override
 	protected Integer visitPlus(AST node) {
@@ -538,12 +551,20 @@ public final class CodeGen extends ASTBaseVisitor<Integer> {
 	//     return x;
 	// }
 
-    // @Override
-	// protected Integer visitFunc_Decl(AST node) {
-	// 	visit(node.getChild(0)); // var_list
-	// 	visit(node.getChild(1)); // block
-	//     return -1;  // This is not an expression, hence no value to return.
-	// }
+	protected Integer visitParams_List(AST node) {
+		return -1;
+	}
+
+     @Override
+	 protected Integer visitFunc_Decl(AST node) {
+        emit(LABEL, ft.getName(node.intData));
+		vt = ft.getVarTable(node.getIntData());
+		func_name = ft.getName(node.getIntData());
+	 	visit(node.getChild(0)); // var_list
+	 	visit(node.getChild(1)); // block
+		 func_name = "global";
+	     return -1;  // This is not an expression, hence no value to return.
+	 }
 //	private void alocateArray(VarTable table, int i){
 //		int space_alloc = table.getTamArr(i) *
 //				primitiveSizes.get(table.getType(i).toString());
@@ -551,22 +572,21 @@ public final class CodeGen extends ASTBaseVisitor<Integer> {
 //	}
 //
 	private void alocateInt(VarTable table, int i){
-		pw.printf("%s:	.word 0", table.getName(i));
+		pw.printf("%s:	.word 0\n", table.getName(i));
 	}
-//
-//	private void alocateBool(VarTable table, int i){
-//		int space_alloc = primitiveSizes.get(table.getType(i).toString());
-//		pw.printf("varBool%d:	.space %d", i, space_alloc);
-//	}
-//
-//	private void alocateFloat(VarTable table, int i) {
-//		int space_alloc = primitiveSizes.get(table.getType(i).toString());
-//		pw.printf("varFloat%d:	.float", i);
-//	}
 
-//	private void alocateString(VarTable table, int i){
-//		int space_alloc = table.getTamArr(i) *
-//				primitiveSizes.get(table.getType(i).toString());
-//		pw.printf("array%d:	.space %d", i, space_alloc);
-//	}
+	private void alocateBool(VarTable table, int i){
+		pw.printf("%s:	.word 0\n", table.getName(i));
+	}
+
+	private void alocateFloat(VarTable table, int i) {
+		int space_alloc = primitiveSizes.get(table.getType(i).toString());
+		pw.printf("varFloat%d:	.float", i);
+	}
+
+	private void alocateString(VarTable table, int i){
+		int space_alloc = table.getTamArr(i) *
+				primitiveSizes.get(table.getType(i).toString());
+		pw.printf("%s:	.space %d", table.getName(i), space_alloc);
+	}
 }

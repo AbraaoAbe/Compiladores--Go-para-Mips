@@ -1,6 +1,7 @@
 package code;
 
 import java.util.Formatter;
+import java.util.Objects;
 
 // Instruction quadruple.
 public final class Instruction {
@@ -17,7 +18,6 @@ public final class Instruction {
 	public Instruction(OpCode op, String o1, String o2, String o3) {
 		this.op = op;
 		this.o1 = o1;
-		//this.t1 = t1;
 		this.o2 = o2;
 		this.o3 = o3;
 	}
@@ -25,13 +25,17 @@ public final class Instruction {
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
 		Formatter f = new Formatter(sb);
-		f.format("%s", this.op.toString());
-		if (this.op.opCount == 1) {
-			f.format(" %s", this.o1);
-		} else if (this.op.opCount == 2) {
-			f.format(" %s, %s", this.o1, this.o2);
-		} else if (this.op.opCount == 3) {
-			f.format(" %s, %s, %s", this.o1, this.o2, this.o3);
+		if (Objects.equals(this.op.name, "label")){
+			f.format("\n%s:", this.o1);
+		} else{
+			f.format("%s", this.op.toString());
+			if (this.op.opCount == 1) {
+				f.format(" %s", this.o1);
+			} else if (this.op.opCount == 2) {
+				f.format(" %s, %s", this.o1, this.o2);
+			} else if (this.op.opCount == 3) {
+				f.format(" %s, %s, %s", this.o1, this.o2, this.o3);
+			}
 		}
 		f.close();
 		return sb.toString();

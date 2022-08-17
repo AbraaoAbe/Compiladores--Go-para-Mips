@@ -91,7 +91,7 @@ public class SemanticChecker extends GoParserBaseVisitor<AST> {
 
 	public StrTable st = new StrTable();   // Tabela de strings.
     public VarTable vt = new VarTable();   // Tabela de variáveis.
-	private FuncTable ft = new FuncTable();
+	public FuncTable ft = new FuncTable();
 	private VarTable localvt;
 	private List<Type> list_params;
 
