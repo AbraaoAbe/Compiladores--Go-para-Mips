@@ -552,6 +552,9 @@ public class SemanticChecker extends GoParserBaseVisitor<AST> {
 	public AST visitAssignment(GoParser.AssignmentContext ctx) {
 		// Visita a expressão da direita.
 		AST exprNode = visit(ctx.expression());
+//		System.err.println("Something");
+//		System.err.println(exprNode.type);
+//        System.exit(1);
 		// Visita o identificador da esquerda.
 		Token idToken = ctx.IDENTIFIER().getSymbol();
 		AST idNode = checkVar(idToken);
@@ -1107,3 +1110,6 @@ public class SemanticChecker extends GoParserBaseVisitor<AST> {
 	}
 
 }
+
+
+

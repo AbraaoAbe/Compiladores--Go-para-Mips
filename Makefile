@@ -59,7 +59,7 @@ BIN_PATH=bin
 # Diretório para os casos de teste
 DATA=/home/igor/Desktop/ztests
 IN=$(DATA)
-FILE=$(IN)/simple.go
+FILE=$(IN)/HelloWorld.go
 TREE=./tree.dot
 CODE=./code.asm
 

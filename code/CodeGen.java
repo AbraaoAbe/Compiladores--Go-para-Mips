@@ -14,6 +14,7 @@ import static typing.Type.*;
 
 import ast.AST;
 import ast.ASTBaseVisitor;
+import org.stringtemplate.v4.ST;
 import tables.FuncTable;
 import tables.StrTable;
 import tables.VarTable;
@@ -101,7 +102,7 @@ public final class CodeGen extends ASTBaseVisitor<Integer> {
 		for (int i = 0; i < 17; i++){
 			freeRegs.add(Boolean.TRUE);
 		}
-		System.out.println(freeRegs.size());
+		//System.out.println(freeRegs.size());
 		//utilizado como temporario +4 na impressão
 		floatRegsCount = 0;
 
@@ -231,6 +232,7 @@ public final class CodeGen extends ASTBaseVisitor<Integer> {
 	private Boolean getFreeReg(int idx) {
 		if(idx >= 17){
 			System.out.println(idx);
+			System.out.println("idx");
 		}
 		else {
 			return freeRegs.get(idx);
@@ -245,6 +247,7 @@ public final class CodeGen extends ASTBaseVisitor<Integer> {
 	private void setFreeReg(int idx) {
 		if(idx >= 17){
 			System.out.println(idx);
+			System.out.println("free");
 		}
 		else{
 			freeRegs.set(idx, Boolean.TRUE);
@@ -254,6 +257,7 @@ public final class CodeGen extends ASTBaseVisitor<Integer> {
 	private void setNotFreeReg(int idx) {
 		if(idx >= 17){
 			System.out.println(idx);
+			System.out.println("free");
 		}
 		else {
 			freeRegs.set(idx, Boolean.FALSE);
@@ -300,22 +304,7 @@ public final class CodeGen extends ASTBaseVisitor<Integer> {
 	    return -1; // This is not an expression, hence no value to return.
 	}
 
-	// @Override
-	// protected Integer visitEq(AST node) {
-	// 	AST l = node.getChild(0);
-	// 	AST r = node.getChild(1);
-	// 	int y = visit(l);
-	// 	int z = visit(r);
-	// 	int x = newIntReg();
-	// 	if (r.type == FLOAT_TYPE) {  // Could equally test 'l' here.
-	// 		emit(EQUf, x, y, z);
-	// 	} else if (r.type == INT_TYPE) {
-	// 		emit(EQUi, x, y, z);
-	// 	} else { // Must be STR_TYPE
-	//         emit(EQUs, x, y, z);
-	//     }
-	//     return x;
-	// }
+
 
 	 @Override
 	 protected Integer visitBlock(AST node) {
@@ -327,7 +316,7 @@ public final class CodeGen extends ASTBaseVisitor<Integer> {
 
 	 @Override
 	 protected Integer visitBoolVal(AST node) {
-	 	String x = newIntReg();
+	 	String x = newIntReg_T();
 	     int c = node.intData;
 	     emit(LI, x, String.valueOf(c));
 	     return Integer.valueOf(x);
@@ -547,8 +536,80 @@ public final class CodeGen extends ASTBaseVisitor<Integer> {
 	    }
 	    return Integer.valueOf(x);
 	}
-	
-	
+
+	@Override
+	protected Integer visitEq(AST node) {
+		AST l = node.getChild(0);
+		AST r = node.getChild(1);
+		//somente essas 2 linhas difere essa funcao da outra de cima
+		int y = visit(l);
+		int z = visit(r);
+
+		//
+		String x = newIntReg_T();
+		//valor da label para nao ficar igual (da problema no mips)
+		String xlabel = String.valueOf(intLabelsIfElse);
+		if (r.type == FLOAT_TYPE) {  // Could equally test 'l' here.
+			emit(BEQ, "$"+String.valueOf(z), "$"+String.valueOf(y), "TRUE"+xlabel);
+			emit(LI, "$"+x, "0");
+			emit(JMP, "FALSE"+xlabel);
+			emit(LABEL, "TRUE"+xlabel);
+			emit(LI, "$"+x, "1");
+			emit(LABEL, "FALSE"+xlabel);
+		} else if (r.type == INT_TYPE) {
+			emit(BEQ, "$"+String.valueOf(z), "$"+String.valueOf(y), "TRUE"+xlabel);
+			emit(LI, "$"+x, "0");
+			emit(JMP, "FALSE"+xlabel);
+			emit(LABEL, "TRUE"+xlabel);
+			emit(LI, "$"+x, "1");
+			emit(LABEL, "FALSE"+xlabel);
+		} else { // Must be STR_TYPE
+			emit(BEQ, "$"+String.valueOf(z), "$"+String.valueOf(y), "TRUE"+xlabel);
+			emit(LI, "$"+x, "0");
+			emit(JMP, "FALSE"+xlabel);
+			emit(LABEL, "TRUE"+xlabel);
+			emit(LI, "$"+x, "1");
+			emit(LABEL, "FALSE"+xlabel);
+		}
+		return Integer.valueOf(x);
+	}
+
+	@Override
+	protected Integer visitNeq(AST node) {
+		AST l = node.getChild(0);
+		AST r = node.getChild(1);
+		//somente essas 2 linhas difere essa funcao da outra de cima
+		int y = visit(l);
+		int z = visit(r);
+
+		//
+		String x = newIntReg_T();
+		//valor da label para nao ficar igual (da problema no mips)
+		String xlabel = String.valueOf(intLabelsIfElse);
+		if (r.type == FLOAT_TYPE) {  // Could equally test 'l' here.
+			emit(BNE, "$"+String.valueOf(z), "$"+String.valueOf(y), "TRUE"+xlabel);
+			emit(LI, "$"+x, "0");
+			emit(JMP, "FALSE"+xlabel);
+			emit(LABEL, "TRUE"+xlabel);
+			emit(LI, "$"+x, "1");
+			emit(LABEL, "FALSE"+xlabel);
+		} else if (r.type == INT_TYPE) {
+			emit(BNE, "$"+String.valueOf(z), "$"+String.valueOf(y), "TRUE"+xlabel);
+			emit(LI, "$"+x, "0");
+			emit(JMP, "FALSE"+xlabel);
+			emit(LABEL, "TRUE"+xlabel);
+			emit(LI, "$"+x, "1");
+			emit(LABEL, "FALSE"+xlabel);
+		} else { // Must be STR_TYPE
+			emit(BNE, "$"+String.valueOf(z), "$"+String.valueOf(y), "TRUE"+xlabel);
+			emit(LI, "$"+x, "0");
+			emit(JMP, "FALSE"+xlabel);
+			emit(LABEL, "TRUE"+xlabel);
+			emit(LI, "$"+x, "1");
+			emit(LABEL, "FALSE"+xlabel);
+		}
+		return Integer.valueOf(x);
+	}
 	
 
 	 @Override
@@ -629,30 +690,30 @@ public final class CodeGen extends ASTBaseVisitor<Integer> {
 	    return -1;  // This is not an expression, hence no value to return.
 	}
 
-	// @Override
-	// protected Integer visitScan(AST node) {
-	// 	AST var = node.getChild(0);
-	//     int addr = var.intData;
-	//     int x;
-	//     if (var.type == INT_TYPE) {
-	//     	x = newIntReg();
-	//         emit(CALL, 0, x);
-	//         emit(STWi, addr, x);
-	//     } else if (var.type == FLOAT_TYPE) {
-	//         x = newFloatReg();
-	//         emit(CALL, 1, x);
-	//         emit(STWf, addr, x);
-	//     } else if (var.type == BOOL_TYPE) {
-	//     	x = newIntReg();
-	//         emit(CALL, 2, x);
-	//         emit(STWi, addr, x);
-	//     } else { // Must be STR_TYPE
-	//     	x = newIntReg();
-	//         emit(CALL, 3, x);
-	//         emit(STWi, addr, x);
-	//     }
-	//     return -1;  // This is not an expression, hence no value to return.
-	// }
+	 @Override
+	 protected Integer visitScan(AST node) {
+		 AST expr = node.getChild(0);
+		 int x = visit(expr);
+		 int addr = node.getChild(0).intData;
+		 switch(expr.type) {
+			 case INT_TYPE:
+			 case BOOL_TYPE:
+				 emit(LI, "$2", "5");
+				 emit(SYCL, "");
+				 emit(MV,  "$"+String.valueOf(x), "$2");
+				 emit(OpCode.SW, "$"+String.valueOf(x), getDataVarName(vt.getName(addr)));
+				 break;
+			 case FLOAT_TYPE:
+				 break;
+			 case STRING_TYPE:
+				 break;
+			 case NO_TYPE:
+			 default:
+				 System.err.printf("Invalid type: %s!\n", expr.type.toString());
+				 System.exit(1);
+		 }
+		 return -1;    // This is not an expression, hence no value to return.
+	 }
 
 	// @Override
 	// protected Integer visitRealVal(AST node) {
@@ -719,22 +780,32 @@ public final class CodeGen extends ASTBaseVisitor<Integer> {
 	    return Integer.valueOf(x);
 	}
 
-	// @Override
-	// protected Integer visitPrint(AST node) {
-	// 	AST expr = node.getChild(0);
-	//     int x = visit(expr);
-	//     switch(expr.type) {
-	//         case INT_TYPE:  emit(CALL, 4, x);  break;
-	//         case FLOAT_TYPE: emit(CALL, 5, x);  break;
-	//         case BOOL_TYPE: emit(CALL, 6, x);  break;
-	//         case STRING_TYPE:  emit(CALL, 7, x);  break;
-	//         case NO_TYPE:
-	//         default:
-	//             System.err.printf("Invalid type: %s!\n", expr.type.toString());
-	//             System.exit(1);
-	//     }
-	//     return -1;  // This is not an expression, hence no value to return.
-	// }
+	 @Override
+	 protected Integer visitPrint(AST node) {
+	 	AST expr = node.getChild(0);
+	     int x = visit(expr);
+	     switch(expr.type) {
+			 case INT_TYPE:
+			 case BOOL_TYPE:
+				 emit(LI, "$2", "1");
+				 emit(MV, "$4", "$"+String.valueOf(x));
+				 emit(SYCL, "");
+				 break;
+	         case FLOAT_TYPE:
+				 break;
+	         case STRING_TYPE:
+//				 emit(CALL, 7, x);
+				 emit(LI, "$2", "4");
+				 emit(MV, "$4", "$"+String.valueOf(x));
+				 emit(SYCL, "");
+				 break;
+	         case NO_TYPE:
+	         default:
+	             System.err.printf("Invalid type: %s!\n", expr.type.toString());
+	             System.exit(1);
+	     }
+	     return -1;  // This is not an expression, hence no value to return.
+	 }
 
 	// @Override
 	// protected Integer visitB2I(AST node) {

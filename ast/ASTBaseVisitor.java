@@ -49,7 +49,7 @@ public abstract class ASTBaseVisitor<T> {
             case FUNC_DECL_NODE:        return visitFunc_Decl(node);
 			case BLOCK_NODE: 			return visitBlock(node);
             // case FUNC_USE_NODE:         return visitFunc_Use(node);
-            // case RETURN_NODE:           return visitReturn(node);
+			// case RETURN_NODE:           return visitReturn(node);
             case PARAMS_LIST_NODE:      return visitParams_List(node);
             // case PARAMS_NODE:           return visitParams(node);
 	
@@ -61,14 +61,15 @@ public abstract class ASTBaseVisitor<T> {
 	        // case R2S_NODE:              return visitR2S(node);
             // case R2I_NODE:              return visitR2I(node);
 
-            // case PRINT_NODE:            return visitPrint(node);
-            // case SCAN_NODE:             return visitScan(node);
+			case PRINT_NODE:            return visitPrint(node);
+            case SCAN_NODE:             return visitScan(node);
             // case ARRAY_NODE:            return visitArray(node);
             // case FUNC_NODE:             return visitFunc(node);
             
             case AND_NODE:              return visitAnd(node);
             case OR_NODE:               return visitOr(node);
-            // case NEQ_NODE:              return visitNeq(node);
+			case EQ_NODE: 				return visitEq(node);
+            case NEQ_NODE:              return visitNeq(node);
             // case STMT_LIST_NODE:        return visitStmt_list(node);
              case BREAK_NODE:            return visitBreak(node);
             // case INDEX_NODE:            return visitIndex(node);
@@ -111,7 +112,7 @@ public abstract class ASTBaseVisitor<T> {
 	protected abstract T visitVarUse(AST node);
      protected abstract T visitFunc_Decl(AST node);
     // protected abstract T visitFunc_Use(AST node);
-    // protected abstract T visitReturn(AST node);
+	// protected abstract T visitReturn(AST node);
      protected abstract T visitParams_List(AST node);
     // protected abstract T visitParams(AST node);
 
@@ -123,14 +124,16 @@ public abstract class ASTBaseVisitor<T> {
 	// protected abstract T visitR2S(AST node);
     // protected abstract T visitR2I(AST node);
 
-    // protected abstract T visitPrint(AST node);
-    // protected abstract T visitScan(AST node);
+     protected abstract T visitPrint(AST node);
+     protected abstract T visitScan(AST node);
     // protected abstract T visitArray(AST node);
     // protected abstract T visitFunc(AST node);
 
     protected abstract T visitAnd(AST node);
     protected abstract T visitOr(AST node);
-    // protected abstract T visitNeq(AST node);
+	protected abstract T visitEq(AST node);
+	protected abstract T visitNeq(AST node);
+
 
     // protected abstract T visitStmt_list(AST node);
      protected abstract T visitBreak(AST node);
