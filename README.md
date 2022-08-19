@@ -38,3 +38,11 @@ em strTable. E, por último mas não menos importante, o código das funções s
 não foram implementadas.
 
 Na pasta `./tests` há testes que executam a funcionalidade do compilador.
+
+--- 
+### Execução
+Para executar a análise semântica com a geração do código em mips basta executar na linha de comando:
+```shell
+make clean
+make ast
+```

@@ -1,43 +1,4 @@
 ## Modifique as variaveis conforme o seu setup.
-#
-#JAVA=java
-#JAVAC=javac
-#
-#ROOT=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
-## Certifique-se de que o antlr esteja instalado em /usr/local/lib
-#
-#ANTLR_PATH=/usr/local/lib/antlr-4.10.1-complete.jar
-##ANTLR_PATH=${ROOT}/antlr-4.10.1-complete.jar
-#CLASS_PATH_OPTION=-cp .:$(ANTLR_PATH)
-#
-## Comandos como descritos na página do ANTLR.
-#ANTLR4=$(JAVA) -jar $(ANTLR_PATH)
-#GRUN=$(JAVA) $(CLASS_PATH_OPTION) org.antlr.v4.gui.TestRig
-#
-## Diretório para aonde vão os arquivos gerados.
-#GEN_PATH=parser
-#MAIN_PATH=checker
-#BIN_PATH=bin
-#
-## Diretório para os casos de teste
-##DATA=$(ROOT)/tests
-#DATA=/home/igor/Desktop/ztests
-#IN=$(DATA)
-#FILE=$(IN)/func.go
-#OUT=./tree.dot
-#
-#
-## 'Go' é o prefixo comum das duas gramáticas (GoLexer e GoParser).
-## 'sourceFile' é a regra inicial de GoParser.
-#
-#run-ast:
-#	$(JAVA) $(CLASS_PATH_OPTION):$(BIN_PATH) $(MAIN_PATH)/Main $(FILE)
-#
-#clean:
-#	@rm -rf $(GEN_PATH) $(BIN_PATH) $(OUT)
-
-# Modifique as variaveis conforme o seu setup.
-
 JAVA=java
 JAVAC=javac
 
@@ -57,7 +18,7 @@ MAIN_PATH=checker
 BIN_PATH=bin
 
 # Diretório para os casos de teste
-DATA=/home/igor/Desktop/ztests
+DATA=./tests
 IN=$(DATA)
 FILE=$(IN)/HelloWorld.go
 TREE=./tree.dot
