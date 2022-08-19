@@ -238,7 +238,8 @@ parameterDecl: IDENTIFIER type_;
 // Já foi feito os visitors
 expression:
 	//primaryExpr #primaryExp
-	 expression mul_op = ( TIMES| DIV | MOD ) expression # timesOver
+	bool_v = (FALSE | TRUE) 		#boolLit
+	| expression mul_op = ( TIMES| DIV | MOD ) expression # timesOver
 	| expression add_op = ( PLUS | MINUS ) expression # plusMinus
 	| expression rel_op = ( EQUALS | NOT_EQUALS | LESS | LESS_OR_EQUALS | GREATER | GREATER_OR_EQUALS ) expression # eqLt
 	| expression LOGICAL_AND expression # relAnd
@@ -247,7 +248,6 @@ expression:
 	| DECIMAL_LIT   				#integerLit
 	| str_v = (RAW_STRING_LIT | INTERPRETED_STRING_LIT)   #stringLit
 	| FLOAT_LIT        				#floatLit
-	| bool_v = (FALSE | TRUE) 		#boolLit
 //	| functionLit					#functionLitval
 	| functionCaller                #funcCaller
 	| IDENTIFIER index?					#exprId

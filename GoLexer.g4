@@ -34,6 +34,10 @@ FLOAT                  :    'float' | 'float32' | 'float64';
 STRING                 :    'string';
 BOOL                   :    'bool';
 
+// Bool decl
+FALSE                  : 'false';
+TRUE                   : 'true';
+
 IDENTIFIER             : LETTER (LETTER | DECIMALS)* -> mode(NLSEMI);
 
 
@@ -85,9 +89,7 @@ MINUS                  : '-';
 CARET                  : '^';
 TIMES                   : '*';
 
-// Bool decl
-FALSE                  : 'false';
-TRUE                   : 'true';
+
 
 // Number literals
 

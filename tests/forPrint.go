@@ -1,12 +1,6 @@
 package main
 
-func ForeachStmts() {
-	// Here we use `range` to sum the numbers in a slice.
-	// Arrays work like this too.
-	var nums [3]int
-	nums[0] = 2
-	nums[1] = 3
-	nums[2] = 4
+func main() {
 
 	var i int
 
@@ -16,10 +10,8 @@ func ForeachStmts() {
 	// blank identifier `_`. Sometimes we actually want
 	// the indexes though.
 	for i = 0; i < 3; i = i + 1 {
-		if nums[i] == 3 {
-			fmt.Println("index:", i)
-			break
-		}
+		fmt.Println("index: ");
+		fmt.Println(i);
 	}
 
 }

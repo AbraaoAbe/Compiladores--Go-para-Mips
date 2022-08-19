@@ -9,6 +9,7 @@ import static code.Instruction.INSTR_MEM_SIZE;
 // import static code.OpCode.SUBf;
 // import static code.OpCode.SUBi;
 import static code.OpCode.*;
+import static java.lang.System.exit;
 import static typing.Type.*;
 
 import ast.AST;
@@ -42,6 +43,7 @@ public final class CodeGen extends ASTBaseVisitor<Integer> {
     private final VarTable globalVt;
 	private final FuncTable ft;
 	private String func_name; // Store the name of the function seen right now
+	private String break_way;
 
 	private PrintWriter pw;
 
@@ -71,6 +73,7 @@ public final class CodeGen extends ASTBaseVisitor<Integer> {
 	private static ArrayList<Boolean> freeRegs = new ArrayList<>();
 
 	public static int intLabelsIfElse;
+	public static int intLabelsFor;
 	
 	public CodeGen(StrTable st, VarTable vt, FuncTable ft, String file_target) throws IOException {
 		this.code = new Instruction[INSTR_MEM_SIZE];
@@ -80,6 +83,7 @@ public final class CodeGen extends ASTBaseVisitor<Integer> {
 		this.ft = ft;
 		this.func_name = "global";
 		this.pw = new PrintWriter(new FileWriter(file_target));
+		this.break_way = "";
 	}
 	
 	// Função principal para geração de código.
@@ -91,6 +95,7 @@ public final class CodeGen extends ASTBaseVisitor<Integer> {
 	 	intRegs_T_count = 0;
 		intRegs_S_count = 0;
 		intLabelsIfElse = 0;
+		intLabelsFor = 0;
 
 
 		for (int i = 0; i < 17; i++){
@@ -140,12 +145,13 @@ public final class CodeGen extends ASTBaseVisitor<Integer> {
 		for (int i = 0; i < varT.size(); i++) {
 			Type t = varT.getType(i);
 			boolean isArray = varT.getTamArr(i) > 0;
+			if (t == FLOAT_TYPE || isArray || t == STRING_TYPE){
+				continue;
+			}
 			if (!Objects.equals(name_func, "global")) {
 				pw.printf("%s.", name_func);
 			}
-			if (isArray){
-				//alocateArray(vt, i);
-			} else if (t == INT_TYPE) {
+			if (t == INT_TYPE) {
 				alocateInt(varT, i);
 //			} else if (t == FLOAT_TYPE) {
 			// 	alocateFloat(vt, i);
@@ -336,6 +342,7 @@ public final class CodeGen extends ASTBaseVisitor<Integer> {
 		 //caso a exprexão seja falsa pula pro else (mesmo que ele seja vazio)
 	     emit(BEQ, "$"+String.valueOf(testReg),"$0", "ELSE"+xlabel); // Leave offset empty now, will be backpatched.
 
+		 break_way = "ENDIF"+xlabel;
 	     // Code for TRUE block.
 	     //int trueBranchStart = nextInstr;
 	     visit(node.getChild(1)); // Generate TRUE block.
@@ -361,8 +368,37 @@ public final class CodeGen extends ASTBaseVisitor<Integer> {
 	     // Backpatch test.
 	     //backpatchBranch(condJumpInstr, falseBranchStart - trueBranchStart + 1);
 		intLabelsIfElse++;
+		break_way = "";
 	    return -1; // This is not an expression, hence no value to return.
 	 }
+
+	@Override
+	protected Integer visitFor(AST node) {
+		int beginRepeat = nextInstr;
+		String xlabel = String.valueOf(intLabelsFor++);
+		visit(node.getChild(0)); // initialize values i = 0
+		emit(LABEL, "Loop"+xlabel);
+
+		visit(node.getChild(3)); // visit block
+		visit(node.getChild(2)); // visit update of i
+
+		int testReg = visit(node.getChild(1)); // Emit code for test.
+		emit(BNE, "$"+String.valueOf(testReg),"$0", "Loop"+xlabel);
+//		emit(BOFb, testReg, beginRepeat - nextInstr);
+		intLabelsFor -= 1;
+		return -1;  // This is not an expression, hence no value to return.
+	}
+
+	@Override
+	protected Integer visitBreak(AST node) {
+		if (!Objects.equals(break_way, "")){
+			emit(JMP, break_way);
+		} else{
+			System.err.print("Invalid break! Break does not belong to a IF or FOR statement\n");
+			exit(1);
+		}
+		return -1;
+	}
 
 	@Override
 	protected Integer visitIntVal(AST node) {
@@ -537,7 +573,7 @@ public final class CodeGen extends ASTBaseVisitor<Integer> {
 		String z = String.valueOf(visit(node.getChild(1)));
 		if (node.type == FLOAT_TYPE) {
 			x = newFloatReg();
-			emit(SUBf, "$"+x, "$"+y, "$"+z);
+			emit(MUL, "$"+x, "$"+y, "$"+z);
 		} else {
 			x = newIntReg_T();
 			emit(MUL, "$"+x, "$"+y, "$"+z);
@@ -629,22 +665,15 @@ public final class CodeGen extends ASTBaseVisitor<Integer> {
 	//     return x;
 	// }
 
-	// // @Override
-	// // protected Integer visitRepeat(AST node) {
-	// // 	int beginRepeat = nextInstr;
-	// //     visit(node.getChild(0)); // Emit code for body.
-	// //     int testReg = visit(node.getChild(1)); // Emit code for test.
-	// //     emit(BOFb, testReg, beginRepeat - nextInstr);
-	// //     return -1;  // This is not an expression, hence no value to return.
-	// // }
 
-	// @Override
-	// protected Integer visitStrVal(AST node) {
-	// 	int x = newIntReg();
-	//     int c = node.intData;
-	//     emit(LDIi, x, c);
-	//     return x;
-	// }
+
+	 @Override
+	 protected Integer visitStrVal(AST node) {
+		String x = newIntReg_T();
+		String c = "str" + (node.intData);
+		emit(LA, "$"+x, c);
+		return Integer.valueOf(x);
+	 }
 
 	// @Override
 	// protected Integer visitTimes(AST node) {

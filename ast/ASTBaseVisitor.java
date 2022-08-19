@@ -26,6 +26,7 @@ public abstract class ASTBaseVisitor<T> {
 		switch(node.kind) {
 	        case ASSIGN_NODE:           return visitAssign(node);
 			case INT_VAL_NODE:          return visitIntVal(node);
+			case STR_VAL_NODE:			return visitStrVal(node);
 			case BOOL_VAL_NODE:          return visitBoolVal(node);
 	        case MINUS_NODE:            return visitMinus(node);
 			case TIMES_NODE:            return visitTimes(node);
@@ -34,6 +35,7 @@ public abstract class ASTBaseVisitor<T> {
 	        case PLUS_NODE:             return visitPlus(node);
 	        case PROGRAM_NODE:          return visitProgram(node);
 			case IF_NODE: 				return visitIf(node);
+			case FOR_NODE:				return visitFor(node);
 	        // case REAL_VAL_NODE:         return visitRealVal(node);
 	        // case STR_VAL_NODE:          return visitStrVal(node);
 	        // case TIMES_NODE:            return visitTimes(node);
@@ -68,7 +70,7 @@ public abstract class ASTBaseVisitor<T> {
             case OR_NODE:               return visitOr(node);
             // case NEQ_NODE:              return visitNeq(node);
             // case STMT_LIST_NODE:        return visitStmt_list(node);
-            // case BREAK_NODE:            return visitBreak(node);
+             case BREAK_NODE:            return visitBreak(node);
             // case INDEX_NODE:            return visitIndex(node);
 
 
@@ -89,6 +91,7 @@ public abstract class ASTBaseVisitor<T> {
 	 protected abstract T visitIf(AST node);
     // protected abstract T visitFor(AST node);
 	protected abstract T visitIntVal(AST node);
+	protected abstract T visitStrVal(AST node);
 	protected abstract T visitBoolVal(AST node);
 
 	 protected abstract T visitMinus(AST node);
@@ -130,7 +133,8 @@ public abstract class ASTBaseVisitor<T> {
     // protected abstract T visitNeq(AST node);
 
     // protected abstract T visitStmt_list(AST node);
-    // protected abstract T visitBreak(AST node);
+     protected abstract T visitBreak(AST node);
+	 protected abstract T visitFor(AST node);
     // protected abstract T visitIndex(AST node);
 
 }	

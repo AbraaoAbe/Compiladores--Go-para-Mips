@@ -772,15 +772,24 @@ public class SemanticChecker extends GoParserBaseVisitor<AST> {
 	@Override
 	public AST visitScanIO(GoParser.ScanIOContext ctx) {
 //		AST idNode = checkVar(ctx.ID().getSymbol());
-		AST exprNode = visit(ctx.paramsCaller());
-		return AST.newSubtree(SCAN_NODE, NO_TYPE, exprNode);
+		AST root = AST.newSubtree(SCAN_NODE, NO_TYPE);
+		if (ctx.paramsCaller() != null){
+			AST exprNode = visit(ctx.paramsCaller());
+			root.addChild(exprNode);
+		}
+		return root;
 	}
 	// Visita o ioStmt:printIo
 	@Override
 	public AST visitPrintIO(GoParser.PrintIOContext ctx) {
 //		AST idNode = checkVar(ctx.ID().getSymbol());
-		AST exprNode = visit(ctx.paramsCaller());
-		return AST.newSubtree(PRINT_NODE, NO_TYPE, exprNode);
+		AST root = AST.newSubtree(PRINT_NODE, NO_TYPE);
+		if (ctx.paramsCaller() != null){
+			AST exprNode = visit(ctx.paramsCaller());
+			root.addChild(exprNode);
+		}
+
+		return root;
 	}
 
 	// Visita as subregra de expression
@@ -1090,5 +1099,11 @@ public class SemanticChecker extends GoParserBaseVisitor<AST> {
 //		// Fim da recursão, retorna um nó de 'var use'.
 //		return checkVar(ctx.ID().getSymbol());
 //	}
+	@Override
+	// Visita a regra: L_PAREN expressionList? R_PAREN
+	public AST visitParamsCaller(GoParser.ParamsCallerContext ctx) {
+		// Fim da recursão, retorna um nó de 'var use'.
+		return visit(ctx.expressionList());
+	}
 
 }
